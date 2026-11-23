@@ -144,6 +144,22 @@ export const homeSchema = z.object({
 });
 export type Home = z.infer<typeof homeSchema>;
 
+// Indoor scenario (DOMAIN_MODEL §5)
+export const indoorScenarioSchema = z.object({
+  id: z.string(),
+  label: z.string(),
+  cIn: z.number().nonnegative(),
+  pctVsBaseline: z.number(),
+  pctVsOutdoor: z.number(),
+  doseByMember: z.array(
+    z.object({
+      memberId: z.string(),
+      dose: z.number().nonnegative(),
+    })
+  ),
+});
+export type IndoorScenario = z.infer<typeof indoorScenarioSchema>;
+
 export const constraintsSchema = z.object({
   budget: z.enum(['none', 'low', 'medium', 'high']),
   rented: z.boolean(),

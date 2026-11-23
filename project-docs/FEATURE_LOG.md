@@ -11,6 +11,7 @@ LinkedIn post). The agent appends one row per step via `/finish-step`; humans ad
 | 1 | 2026-11-23 | Repository scaffold, Express 5 foundation, React 19 shell, Tailwind v4, CI, Docker | `package.json`, `src/server/app.ts`, `src/web/App.tsx`, `Dockerfile` | 17 / 17 | 93.62% | None (foundation step) |
 | 2 | 2026-11-23 | CPCB Indian National AQI engine, breakpoints, 24-h averaging, haversine | `src/domain/data/naqiBreakpoints.ts`, `src/domain/naqi.ts`, `src/domain/geo.ts` | 54 / 71 | 97.39% (naqi.ts: 98.01% lines, 98.21% branches) | None |
 | 3 | 2026-11-23 | Exposure dose, IST time, clean-window finder, commute comparison & emissions | `src/shared/schemas.ts`, `src/domain/time.ts`, `src/domain/exposure.ts`, `src/domain/windows.ts`, `src/domain/commute.ts` | 88 / 159 | 98.73% (src/domain: 99.08% lines, src/shared: 100% lines) | None |
+| 4 | 2026-11-23 | Indoor air engine: steady-state mass balance, purifier sizing, plant CADR (evidence-based), scenarios, source warnings | `src/domain/data/indoorDefaults.ts`, `src/domain/data/evidence.ts`, `src/domain/indoor.ts`, `src/domain/indoor.test.ts`, `src/shared/schemas.ts` | 36 / 195 | 100% lines, 83.67% branches (indoor.ts); global 92.14% lines | Branch coverage for rare NaN paths in edge loops |
 
 ## Prompt evolution notes
 
