@@ -1,0 +1,11 @@
+{
+  "title": "Invalid Profile Without ID",
+  "members": "invalid_string_instead_of_array",
+  "home": {
+    "roomAreaM2": -5,
+    "purifier": {
+      "present": false,
+      "cadrM3h": 350
+    }
+  }
+}

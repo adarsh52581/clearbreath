@@ -1,0 +1,54 @@
+{
+  "id": "chennai-custom-home",
+  "title": "Chennai — coastal family with school kids",
+  "description": "Custom family in Chennai evaluating air filtration during seasonal weather inversions.",
+  "cityId": "chennai",
+  "members": [
+    { "id": "m1", "label": "Parent", "ageGroup": "adult", "sensitivities": [] },
+    { "id": "m2", "label": "Teen", "ageGroup": "teen", "sensitivities": [] },
+    { "id": "m3", "label": "Child", "ageGroup": "child", "sensitivities": ["asthma"] }
+  ],
+  "activities": [
+    {
+      "id": "a1",
+      "label": "Morning cycle",
+      "memberIds": ["m2"],
+      "kind": "exercise",
+      "intensity": "high",
+      "durationMin": 45,
+      "usualStartHour": 6,
+      "flexible": { "earliestHour": 5, "latestHour": 9 }
+    }
+  ],
+  "commutes": [
+    {
+      "id": "c1",
+      "label": "IT corridor commute",
+      "memberIds": ["m1"],
+      "distanceKm": 16,
+      "currentMode": "bus",
+      "allowedModes": ["bus", "metro", "cab"],
+      "usualStartHour": 8,
+      "daysPerWeek": 5
+    }
+  ],
+  "home": {
+    "roomAreaM2": 35,
+    "ceilingHeightM": 2.8,
+    "windowState": "open",
+    "purifier": { "present": false, "cadrM3h": 0 },
+    "cookingFuel": "png",
+    "kitchenExhaust": true,
+    "incense": false,
+    "mosquitoCoil": false,
+    "smokingIndoors": false,
+    "hoursIndoorsPerDay": 15,
+    "plantsCount": 5
+  },
+  "constraints": {
+    "budget": "medium",
+    "rented": true,
+    "mobilityLimited": false
+  },
+  "notes": "Coastal humidity keeps PM2.5 lower most days, but evening traffic creates spikes."
+}
