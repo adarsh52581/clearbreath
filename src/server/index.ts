@@ -1,8 +1,33 @@
 import { loadConfig } from './config.js';
 import { createApp } from './app.js';
+import { TypedCache } from './cache.js';
+import { createOpenAqAdapter } from './adapters/openaq.js';
+import { createGoogleAqAdapter } from './adapters/googleAirQuality.js';
+import { createOpenMeteoAdapter } from './adapters/openMeteo.js';
+import { createAirService } from './services/airService.js';
+import type { AirReport } from '../shared/schemas.js';
 
 const config = loadConfig();
-const app = createApp({ config });
+
+// Build adapters from config
+const openaq = createOpenAqAdapter({ apiKey: config.openaqApiKey ?? '' });
+const google =
+  config.googleMapsApiKey && config.googleMapsApiKey.trim()
+    ? createGoogleAqAdapter({ apiKey: config.googleMapsApiKey })
+    : undefined;
+const openMeteo = createOpenMeteoAdapter();
+
+const airCache = new TypedCache<AirReport>(200);
+
+const airService = createAirService({
+  openaq,
+  google,
+  openMeteo,
+  cache: airCache,
+  clock: () => new Date().toISOString(),
+});
+
+const app = createApp({ config, airService });
 
 const server = app.listen(config.port, () => {
   const logEntry = JSON.stringify({

@@ -1,0 +1,49 @@
+{
+  "meta": {
+    "name": "openaq-api",
+    "website": "/",
+    "page": 1,
+    "limit": 100,
+    "found": 2
+  },
+  "results": [
+    {
+      "datetime": {
+        "utc": "2026-11-23T10:00:00Z",
+        "local": "2026-11-23T15:30:00+05:30"
+      },
+      "value": 87.5,
+      "parameter": {
+        "id": 2,
+        "name": "pm25",
+        "units": "µg/m³",
+        "displayName": "PM2.5"
+      },
+      "coordinates": {
+        "latitude": 28.6508,
+        "longitude": 77.3152
+      },
+      "sensorsId": 10204,
+      "locationsId": 8118
+    },
+    {
+      "datetime": {
+        "utc": "2026-11-23T10:00:00Z",
+        "local": "2026-11-23T15:30:00+05:30"
+      },
+      "value": 165.0,
+      "parameter": {
+        "id": 1,
+        "name": "pm10",
+        "units": "µg/m³",
+        "displayName": "PM10"
+      },
+      "coordinates": {
+        "latitude": 28.6508,
+        "longitude": 77.3152
+      },
+      "sensorsId": 10205,
+      "locationsId": 8118
+    }
+  ]
+}

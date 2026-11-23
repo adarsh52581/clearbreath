@@ -275,3 +275,99 @@ export const naqiResultSchema = z.object({
   note: z.string(),
 });
 export type NaqiResult = z.infer<typeof naqiResultSchema>;
+
+// Section 5.2 extended — AirReport and related types
+
+export const warningCodeSchema = z.enum([
+  'NO_STATION',
+  'STALE_STATION',
+  'FORECAST_FALLBACK',
+  'FORECAST_UNAVAILABLE',
+  'INDICATIVE_AQI',
+  'UPLOADED_DATA',
+  'UNIT_MISMATCH',
+]);
+export type WarningCode = z.infer<typeof warningCodeSchema>;
+
+export const sourceRefSchema = z.object({
+  name: z.string(),
+  provider: z.string().optional(),
+  url: z.string(),
+  kind: z.enum(['measured', 'forecast', 'uploaded']),
+  fetchedAtUtc: z.string(),
+  dataTimeUtc: z.string().optional(),
+});
+export type SourceRef = z.infer<typeof sourceRefSchema>;
+
+export const readingSchema = z.object({
+  value: z.number(),
+  unit: z.literal('µg/m³'),
+  atUtc: z.string(),
+});
+export type Reading = z.infer<typeof readingSchema>;
+
+export const measuredAirSchema = z.object({
+  source: sourceRefSchema,
+  station: z.object({
+    id: z.number(),
+    name: z.string(),
+    distanceKm: z.number(),
+    isMonitor: z.boolean(),
+  }),
+  latest: z.object({
+    pm25: readingSchema.optional(),
+    pm10: readingSchema.optional(),
+  }),
+  series24h: z.object({
+    pm25: z.array(hourlyValueSchema),
+    pm10: z.array(hourlyValueSchema),
+  }),
+  freshness: z.enum(['fresh', 'stale', 'unavailable']),
+});
+export type MeasuredAir = z.infer<typeof measuredAirSchema>;
+
+export const forecastSchema = z.object({
+  source: sourceRefSchema,
+  points: z.array(forecastPointSchema),
+});
+export type Forecast = z.infer<typeof forecastSchema>;
+
+export const airReportSchema = z.object({
+  location: z.object({
+    label: z.string(),
+    lat: z.number(),
+    lon: z.number(),
+    cityId: z.string().optional(),
+  }),
+  measured: measuredAirSchema.nullable(),
+  naqi: naqiResultSchema.nullable(),
+  forecast: forecastSchema.nullable(),
+  warnings: z.array(z.object({ code: warningCodeSchema, message: z.string() })),
+  fetchedAtUtc: z.string(),
+});
+export type AirReport = z.infer<typeof airReportSchema>;
+
+export const citySchema = z.object({
+  id: z.string(),
+  name: z.string(),
+  state: z.string(),
+  lat: z.number(),
+  lon: z.number(),
+  ncr: z.boolean(),
+});
+export type City = z.infer<typeof citySchema>;
+
+export const uploadedSeriesSchema = z.object({
+  fileName: z.string().max(80),
+  points: z
+    .array(
+      z.object({
+        timeUtc: z.string(),
+        pm25: z.number().min(0).max(2000).nullable(),
+        pm10: z.number().min(0).max(2000).nullable(),
+      }),
+    )
+    .min(1)
+    .max(500),
+});
+export type UploadedSeries = z.infer<typeof uploadedSeriesSchema>;

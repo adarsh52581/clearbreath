@@ -5,13 +5,19 @@ import path from 'node:path';
 import type { Config } from './config.js';
 import { configureSecurity } from './middleware/security.js';
 import { apiNotFoundHandler, errorHandler } from './errors.js';
+import { createCitiesRouter } from './routes/cities.js';
+import { createAirRouter } from './routes/air.js';
+import type { AirService } from './services/airService.js';
 
 export interface AppDeps {
   config: Config;
+  airService?: AirService;
 }
 
-export function createApp({ config }: AppDeps): Express {
+export function createApp({ config, airService }: AppDeps): Express {
   const app = express();
+
+  app.set('trust proxy', 1); // Cloud Run — use client IP for rate limiting
 
   configureSecurity(app);
   app.use(compression());
@@ -24,6 +30,14 @@ export function createApp({ config }: AppDeps): Express {
       time: new Date().toISOString(),
     });
   });
+
+  // Cities route (no rate-limit; cheap static data)
+  app.use('/api', createCitiesRouter());
+
+  // Air route (rate-limited; requires airService)
+  if (airService) {
+    app.use('/api', createAirRouter(airService));
+  }
 
   app.use('/api', apiNotFoundHandler);
 

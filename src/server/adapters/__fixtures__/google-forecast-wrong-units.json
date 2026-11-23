@@ -1,0 +1,26 @@
+{
+  "hourlyForecasts": [
+    {
+      "dateTime": "2026-11-23T12:00:00Z",
+      "indexes": [],
+      "pollutants": [
+        {
+          "code": "pm25",
+          "concentration": {
+            "value": 72.5,
+            "units": "AQI"
+          },
+          "additionalInfo": {}
+        },
+        {
+          "code": "pm10",
+          "concentration": {
+            "value": 140.0,
+            "units": "MICROGRAMS_PER_CUBIC_METER"
+          },
+          "additionalInfo": {}
+        }
+      ]
+    }
+  ]
+}
