@@ -1,5 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import request from 'supertest';
+import fs from 'node:fs';
+import path from 'node:path';
 import { createApp } from './app.js';
 import type { Config } from './config.js';
 
@@ -81,12 +83,26 @@ describe('app', () => {
       geminiApiKey: 'test',
       openaqApiKey: 'test',
     };
-    const app = createApp({ config: prodConfig });
-    const response = await request(app).get('/some-page');
+    const webDistPath = path.resolve(process.cwd(), 'dist/web');
+    const indexPath = path.join(webDistPath, 'index.html');
+    const createdTempFile = !fs.existsSync(indexPath);
+    if (createdTempFile) {
+      fs.mkdirSync(webDistPath, { recursive: true });
+      fs.writeFileSync(indexPath, '<!DOCTYPE html><html><body>ClearBreath</body></html>');
+    }
 
-    expect(response.status).toBe(200);
-    expect(response.headers['content-type']).toMatch(/text\/html/);
-    expect(response.headers['cache-control']).toBe('no-cache');
-    expect(response.text).toContain('ClearBreath');
+    try {
+      const app = createApp({ config: prodConfig });
+      const response = await request(app).get('/some-page');
+
+      expect(response.status).toBe(200);
+      expect(response.headers['content-type']).toMatch(/text\/html/);
+      expect(response.headers['cache-control']).toBe('no-cache');
+      expect(response.text).toContain('ClearBreath');
+    } finally {
+      if (createdTempFile) {
+        fs.unlinkSync(indexPath);
+      }
+    }
   });
 });

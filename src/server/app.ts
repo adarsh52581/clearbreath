@@ -1,5 +1,6 @@
 import express, { type Express } from 'express';
 import compression from 'compression';
+import fs from 'node:fs';
 import path from 'node:path';
 import type { Config } from './config.js';
 import { configureSecurity } from './middleware/security.js';
@@ -49,7 +50,7 @@ export function createApp({ config }: AppDeps): Express {
     );
 
     app.use((req, res, next) => {
-      if (req.method === 'GET') {
+      if (req.method === 'GET' && fs.existsSync(indexPath)) {
         res.setHeader('Cache-Control', 'no-cache');
         res.sendFile(indexPath);
       } else {

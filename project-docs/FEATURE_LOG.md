@@ -9,6 +9,7 @@ LinkedIn post). The agent appends one row per step via `/finish-step`; humans ad
 | --- | --- | --- | --- | --- | --- | --- |
 | 0 | 2026-11-23 | Spec pack: rules + project docs written before any code | `AGENTS.md`, `project-docs/*` | – | – | – |
 | 1 | 2026-11-23 | Repository scaffold, Express 5 foundation, React 19 shell, Tailwind v4, CI, Docker | `package.json`, `src/server/app.ts`, `src/web/App.tsx`, `Dockerfile` | 17 / 17 | 93.62% | None (foundation step) |
+| 2 | 2026-11-23 | CPCB Indian National AQI engine, breakpoints, 24-h averaging, haversine | `src/domain/data/naqiBreakpoints.ts`, `src/domain/naqi.ts`, `src/domain/geo.ts` | 54 / 71 | 97.39% (naqi.ts: 98.01% lines, 98.21% branches) | None |
 
 ## Prompt evolution notes
 
