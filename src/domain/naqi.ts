@@ -5,22 +5,9 @@ import {
   type Category,
   type CategoryKey,
 } from './data/naqiBreakpoints.js';
+import type { HourlyValue, NaqiResult } from '../shared/schemas.js';
 
-export type { Category, CategoryKey };
-
-export interface HourlyValue {
-  timeUtc: string;
-  value: number;
-}
-
-export interface NaqiResult {
-  value: number;
-  category: CategoryKey;
-  dominant: 'pm25' | 'pm10';
-  basis: '24h' | 'indicative-latest';
-  subIndices: { pm25?: number; pm10?: number };
-  note: string;
-}
+export type { Category, CategoryKey, HourlyValue, NaqiResult };
 
 export function subIndex(pollutant: 'pm25' | 'pm10', concentration: number): number | null {
   if (typeof concentration !== 'number' || !Number.isFinite(concentration) || concentration < 0) {
