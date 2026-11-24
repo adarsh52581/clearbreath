@@ -1,0 +1,69 @@
+{
+  "profile": {
+    "id": "delhi-asthma-child",
+    "title": "Delhi — child with asthma",
+    "description": "Child with asthma and daily school walk; needs low-exposure afternoon play window.",
+    "cityId": "delhi",
+    "members": [
+      { "id": "m1", "label": "Parent", "ageGroup": "adult", "sensitivities": [] },
+      { "id": "m2", "label": "Child", "ageGroup": "child", "sensitivities": ["asthma"] }
+    ],
+    "activities": [
+      {
+        "id": "a1",
+        "label": "Evening park play",
+        "memberIds": ["m2"],
+        "kind": "outdoor_play",
+        "intensity": "moderate",
+        "durationMin": 60,
+        "usualStartHour": 17,
+        "flexible": { "earliestHour": 14, "latestHour": 19 }
+      },
+      {
+        "id": "a2",
+        "label": "School walk",
+        "memberIds": ["m2"],
+        "kind": "walk",
+        "intensity": "light",
+        "durationMin": 20,
+        "usualStartHour": 7,
+        "flexible": null
+      }
+    ],
+    "commutes": [
+      {
+        "id": "c1",
+        "label": "Office commute",
+        "memberIds": ["m1"],
+        "distanceKm": 14,
+        "currentMode": "car",
+        "allowedModes": ["metro", "bus", "cab", "car"],
+        "usualStartHour": 8,
+        "daysPerWeek": 5
+      }
+    ],
+    "home": {
+      "roomAreaM2": 12,
+      "ceilingHeightM": 2.8,
+      "windowState": "partly_open",
+      "purifier": { "present": false, "cadrM3h": 0 },
+      "cookingFuel": "lpg",
+      "kitchenExhaust": false,
+      "incense": true,
+      "mosquitoCoil": false,
+      "smokingIndoors": false,
+      "hoursIndoorsPerDay": 18,
+      "plantsCount": 0
+    },
+    "constraints": {
+      "budget": "low",
+      "rented": false,
+      "mobilityLimited": false
+    },
+    "notes": "Son uses an inhaler; we can't afford an expensive purifier."
+  },
+  "location": {
+    "cityId": "delhi"
+  },
+  "language": "en"
+}

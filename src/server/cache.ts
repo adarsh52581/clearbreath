@@ -37,6 +37,10 @@ export class TypedCache<T> {
     this.inner.set(key, { kind: 'ok', value }, { ttl: ttlMs });
   }
 
+  clear(): void {
+    this.inner.clear();
+  }
+
   /**
    * Returns the cached value if present; otherwise runs loader,
    * caches the result for ttlMs, and returns it.

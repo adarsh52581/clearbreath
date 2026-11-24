@@ -371,3 +371,108 @@ export const uploadedSeriesSchema = z.object({
     .max(500),
 });
 export type UploadedSeries = z.infer<typeof uploadedSeriesSchema>;
+
+// Section 5.3 Facts and Candidates
+export const factKindSchema = z.enum([
+  'measured',
+  'forecast',
+  'computed',
+  'reference',
+  'assumption',
+  'guidance',
+  'uploaded',
+]);
+export type FactKind = z.infer<typeof factKindSchema>;
+
+export const factSchema = z.object({
+  id: z.string().regex(/^[a-z0-9_]{3,80}$/),
+  label: z.string(),
+  value: z.union([z.number(), z.string()]),
+  unit: z.string().optional(),
+  display: z.string(),
+  kind: factKindSchema,
+  provenance: z.string(),
+  asOfUtc: z.string().optional(),
+});
+export type Fact = z.infer<typeof factSchema>;
+
+export const optionSchema = z.object({
+  optionId: z.string(),
+  label: z.string(),
+  recommended: z.boolean(),
+  factIds: z.array(z.string()),
+});
+export type Option = z.infer<typeof optionSchema>;
+
+export const candidatesSchema = z.object({
+  activities: z.array(
+    z.object({
+      itemId: z.string(),
+      label: z.string(),
+      memberIds: z.array(z.string()),
+      options: z.array(optionSchema),
+    }),
+  ),
+  commutes: z.array(
+    z.object({
+      itemId: z.string(),
+      label: z.string(),
+      memberIds: z.array(z.string()),
+      options: z.array(optionSchema),
+    }),
+  ),
+  indoor: z.array(
+    z.object({
+      actionId: z.string(),
+      label: z.string(),
+      cost: z.enum(['free', 'low', 'medium', 'high']),
+      factIds: z.array(z.string()),
+    }),
+  ),
+  community: z.array(
+    z.object({
+      actionId: z.string(),
+      label: z.string(),
+      factIds: z.array(z.string()),
+    }),
+  ),
+});
+export type Candidates = z.infer<typeof candidatesSchema>;
+
+// Section 5.4 Plan API Schemas
+export const languageSchema = z.enum(['en', 'hi']);
+export type Language = z.infer<typeof languageSchema>;
+
+export const locationRefSchema = z.union([
+  z.object({ cityId: z.string() }),
+  z.object({ lat: z.number(), lon: z.number() }),
+]);
+export type LocationRef = z.infer<typeof locationRefSchema>;
+
+export const planRequestSchema = z.object({
+  profile: householdProfileSchema,
+  location: locationRefSchema,
+  upload: uploadedSeriesSchema.optional(),
+  language: languageSchema,
+});
+export type PlanRequest = z.infer<typeof planRequestSchema>;
+
+export const responseMetaSchema = z.object({
+  origin: z.enum(['gemini', 'cache', 'last-good', 'fallback']),
+  model: z.string().optional(),
+  attempts: z.number().int().min(0).max(2),
+  generatedAtUtc: z.string(),
+  warnings: z.array(z.string()),
+});
+export type ResponseMeta = z.infer<typeof responseMetaSchema>;
+
+export const planResponseSchema = z.object({
+  air: airReportSchema,
+  facts: z.array(factSchema),
+  candidates: candidatesSchema,
+  plan: z.any(), // detailed typing in aiSchemas.ts
+  meta: responseMetaSchema,
+});
+export type PlanResponse = z.infer<typeof planResponseSchema>;
+
+

@@ -7,14 +7,17 @@ import { configureSecurity } from './middleware/security.js';
 import { apiNotFoundHandler, errorHandler } from './errors.js';
 import { createCitiesRouter } from './routes/cities.js';
 import { createAirRouter } from './routes/air.js';
+import { createPlanRouter } from './routes/plan.js';
 import type { AirService } from './services/airService.js';
+import type { PlanService } from './services/planService.js';
 
 export interface AppDeps {
   config: Config;
   airService?: AirService;
+  planService?: PlanService;
 }
 
-export function createApp({ config, airService }: AppDeps): Express {
+export function createApp({ config, airService, planService }: AppDeps): Express {
   const app = express();
 
   app.set('trust proxy', 1); // Cloud Run — use client IP for rate limiting
@@ -37,6 +40,11 @@ export function createApp({ config, airService }: AppDeps): Express {
   // Air route (rate-limited; requires airService)
   if (airService) {
     app.use('/api', createAirRouter(airService));
+  }
+
+  // Plan route (rate-limited; requires planService)
+  if (planService) {
+    app.use('/api', createPlanRouter(planService));
   }
 
   app.use('/api', apiNotFoundHandler);
