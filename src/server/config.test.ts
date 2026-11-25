@@ -62,4 +62,11 @@ describe('config', () => {
     expect(loadConfig({ NODE_ENV: 'test', GEMINI_FALLBACK_MODEL: '   ' }).geminiFallbackModel).toBeUndefined();
     expect(loadConfig({ NODE_ENV: 'test' }).geminiFallbackModel).toBeUndefined();
   });
+  it('rejects speech and image model ids with a clear message', () => {
+    expect(() => loadConfig({ NODE_ENV: 'test', GEMINI_MODEL: 'gemini-3.8-flash-tts' })).toThrow(/speech or image model/);
+    expect(() =>
+      loadConfig({ NODE_ENV: 'test', GEMINI_FALLBACK_MODEL: 'gemini-3.1-flash-image' }),
+    ).toThrow(/GEMINI_FALLBACK_MODEL/);
+    expect(loadConfig({ NODE_ENV: 'test', GEMINI_MODEL: 'gemini-3.6-flash' }).geminiModel).toBe('gemini-3.6-flash');
+  });
 });

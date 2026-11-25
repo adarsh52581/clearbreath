@@ -22,7 +22,7 @@ import { logEvent } from '../log.js';
 import { clipErrors, isProviderFailure } from '../ai/retryPolicy.js';
 import { TypedCache } from '../cache.js';
 import type { AirService } from './airService.js';
-import type { AiClient } from '../ai/aiClient.js';
+import { AI_REQUEST_BUDGET_MS, type AiClient } from '../ai/aiClient.js';
 
 export interface CachedIaqEntry {
   readonly explanation: AiIndoorExplanation;
@@ -193,7 +193,7 @@ async function attemptIaqGeneration(
   candidates: Candidates,
 ): Promise<{ ok: true; plan: AiIndoorExplanation } | { ok: false; errors: string[]; retryable: boolean }> {
   const controller = new AbortController();
-  const timer = setTimeout(() => controller.abort(), 20000);
+  const timer = setTimeout(() => controller.abort(), AI_REQUEST_BUDGET_MS);
   try {
     const raw = await ai.generateJson({
       system: systemPrompt,

@@ -32,6 +32,22 @@ export type Config = {
   grapSourceUrl?: string;
 };
 
+// ClearBreath needs JSON text back, so speech (-tts) and image (-image) models cannot work.
+const NON_TEXT_MODEL = /-(tts|image)(-|$)/i;
+
+function validateModelIds(env: z.infer<typeof envSchema>): void {
+  for (const [name, id] of [
+    ['GEMINI_MODEL', env.GEMINI_MODEL],
+    ['GEMINI_FALLBACK_MODEL', env.GEMINI_FALLBACK_MODEL ?? ''],
+  ] as const) {
+    if (NON_TEXT_MODEL.test(id.trim())) {
+      throw new Error(
+        `${name}=${id.trim()} is a speech or image model. Use a text model, e.g. one ending in -flash or -flash-lite.`,
+      );
+    }
+  }
+}
+
 function validateProductionEnv(env: z.infer<typeof envSchema>): void {
   if (env.NODE_ENV !== 'production') {
     return;
@@ -65,6 +81,7 @@ export function loadConfig(rawEnv: Record<string, string | undefined> = process.
 
   const env = parsed.data;
   validateProductionEnv(env);
+  validateModelIds(env);
 
   return {
     nodeEnv: env.NODE_ENV,

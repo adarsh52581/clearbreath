@@ -20,6 +20,7 @@ LinkedIn post). The agent appends one row per step via `/finish-step`; humans ad
 | 11 | 2026-11-25 | Hardening pass: base `/api` rate limiter, enhanced bundle secret scan in `check` & CI, raised coverage thresholds (85/85/80/85, `domain` ≥ 95% lines), WCAG contrast token test, `postIaqExplain` client test, README evidence map | `scripts/check-bundle-secrets.mjs`, `vitest.config.ts`, `src/server/app.ts`, `src/web/styles.test.ts`, `src/web/api/client.test.ts`, `package.json`, `.github/workflows/ci.yml`, `README.md` | 13 / 370 | 95.8% lines, 84.15% branches, 86.68% functions (global); `domain` 95.75% lines | Optional Playwright E2E not requested |
 | Fix | 2026-11-25 | Dev white screen fixed (browser API client moved out of the Vite `/api` proxy path, guard test), dev redirect :8080 → :5173, `.env.example` restored, `@google/genai` 0.3 → 3.6 with `responseJsonSchema`, secret-free AI failure logging and no second call on provider errors, Noida + Gurugram cities, bundle scan for AQ.-style keys and real key values | `src/web/lib/apiClient.ts`, `src/web/devServer.test.ts`, `src/server/app.ts`, `src/server/log.ts`, `src/server/ai/retryPolicy.ts`, `src/server/ai/geminiClient.ts`, `src/server/services/*Service.ts`, `src/domain/data/cities.ts`, `scripts/check-bundle-secrets.mjs` | 9 / 379 | 95.84% lines, 84.56% branches, 86.62% functions (global) | Verify Gemini end-to-end with a real key |
 | Fix 2 | 2026-11-25 | Gemini resilience: one retry ~1.5 s after a 503 "high demand" error, optional `GEMINI_FALLBACK_MODEL` for overload (503) and quota (429) errors, no retry on other errors | `src/server/ai/geminiClient.ts`, `src/server/ai/geminiClient.test.ts`, `src/server/config.ts`, `src/server/index.ts`, `.env.example` | 12 / 391 | 95.98% lines, 84.85% branches, 86.95% functions (global) | Choose a fallback model id from AI Studio |
+| Fix 3 | 2026-11-25 | Gemini timing: 15 s per call and 35 s per request so a slow first model still leaves time for the fallback; a timed-out first call is retried on the fallback; startup rejects speech (-tts) and image (-image) model ids | `src/server/ai/aiClient.ts`, `src/server/ai/geminiClient.ts`, `src/server/config.ts`, `src/server/services/*Service.ts`, `.env.example` | 3 / 394 | 95.99% lines, 84.82% branches, 86.99% functions (global) | – |
 
 ## Prompt evolution notes
 
@@ -35,6 +36,8 @@ Record what had to change in a prompt and why (this is the "how prompts evolved"
 - Fix 2: the first real-key test failed with Gemini 503 "model is experiencing high demand". The
   key, model id and request format were fine; the model was overloaded. The client now retries once
   and can switch to a fallback model, so judges see Gemini's explanation more often during peaks.
+- Fix 3: a speech model (`-tts`) was set as GEMINI_MODEL by mistake and the fallback model timed
+  out under load. Startup now rejects non-text models, and each call gets its own time limit.
 
 ## Submissions
 

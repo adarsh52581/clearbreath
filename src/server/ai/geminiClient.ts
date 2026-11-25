@@ -3,6 +3,9 @@ import { AppError } from '../errors.js';
 import { logEvent } from '../log.js';
 import type { AiClient, GenerateJsonArgs } from './aiClient.js';
 
+/** One call may take at most this long, so a slow first model still leaves time for a second try. */
+export const GEMINI_CALL_TIMEOUT_MS = 15_000;
+
 /** Calls one Gemini model once; injected in tests. */
 export type GenerateFn = (model: string, args: GenerateJsonArgs) => Promise<{ text?: string }>;
 
@@ -17,7 +20,7 @@ export interface GeminiClientOptions {
   sleep?: (ms: number, signal: AbortSignal) => Promise<void>;
 }
 
-type FailureKind = 'overloaded' | 'rate-limited' | 'other';
+type FailureKind = 'overloaded' | 'timeout' | 'rate-limited' | 'other';
 type AttemptResult = { ok: true; text: string } | { ok: false; error: unknown; kind: FailureKind };
 
 function errorStatus(err: unknown): number | undefined {
@@ -38,6 +41,12 @@ export function classifyGeminiError(err: unknown): FailureKind {
     return 'overloaded';
   }
   return 'other';
+}
+
+function isTimeoutLike(err: unknown): boolean {
+  const name = err instanceof Error ? err.name : '';
+  const msg = err instanceof Error ? err.message : String(err);
+  return name === 'AbortError' || name === 'TimeoutError' || /timeout|timed out|aborted|deadline/i.test(msg);
 }
 
 function toAppError(err: unknown, signal: AbortSignal): AppError {
@@ -85,7 +94,7 @@ function sdkGenerate(apiKey: string): GenerateFn {
         maxOutputTokens: 2048,
         thinkingConfig: { includeThoughts: false },
         abortSignal: signal,
-        httpOptions: { timeout: 20000 },
+        httpOptions: { timeout: GEMINI_CALL_TIMEOUT_MS },
       },
     });
 }
@@ -99,14 +108,17 @@ async function attempt(generate: GenerateFn, model: string, args: GenerateJsonAr
     }
     return { ok: true, text: response.text };
   } catch (error: unknown) {
-    return { ok: false, error, kind: classifyGeminiError(error) };
+    // A single call that ran out of time (while the overall request still has budget) is treated
+    // like an overloaded model: worth one more try, preferably on the fallback model.
+    const kind = !args.signal.aborted && isTimeoutLike(error) ? 'timeout' : classifyGeminiError(error);
+    return { ok: false, error, kind };
   }
 }
 
 /** Picks the model for a second try, or null when a retry cannot help. */
 function retryModel(kind: FailureKind, model: string, fallbackModel?: string): string | null {
   const fallback = fallbackModel && fallbackModel !== model ? fallbackModel : null;
-  if (kind === 'overloaded') return fallback ?? model; // demand spikes are usually brief
+  if (kind === 'overloaded' || kind === 'timeout') return fallback ?? model; // usually brief
   if (kind === 'rate-limited') return fallback; // same model, same quota: pointless
   return null;
 }

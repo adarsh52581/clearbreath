@@ -1,7 +1,13 @@
 import { describe, expect, it, vi } from 'vitest';
 import { AppError } from '../errors.js';
 import type { GenerateJsonArgs } from './aiClient.js';
-import { classifyGeminiError, createGeminiClient, type GenerateFn } from './geminiClient.js';
+import { AI_REQUEST_BUDGET_MS } from './aiClient.js';
+import {
+  classifyGeminiError,
+  createGeminiClient,
+  GEMINI_CALL_TIMEOUT_MS,
+  type GenerateFn,
+} from './geminiClient.js';
 
 const overloaded = new Error(
   '{"error":{"code":503,"message":"This model is currently experiencing high demand.","status":"UNAVAILABLE"}}',
@@ -108,6 +114,18 @@ describe('createGeminiClient', () => {
     const client = createGeminiClient({ apiKey: 'k', model: 'main', generate, sleep });
     await expect(client.generateJson(args())).rejects.toMatchObject({ code: 'UPSTREAM_UNAVAILABLE' });
     expect(models).toEqual(['main']);
+  });
+
+  it('tries the fallback model when the first call runs out of time', async () => {
+    const slow = Object.assign(new Error('The operation was aborted due to timeout'), { name: 'TimeoutError' });
+    const { generate, models } = scripted(slow, '{"ok":true}');
+    const client = createGeminiClient({ apiKey: 'k', model: 'main', fallbackModel: 'backup', generate, sleep: noSleep });
+    await expect(client.generateJson(args())).resolves.toBe('{"ok":true}');
+    expect(models).toEqual(['main', 'backup']);
+  });
+
+  it('leaves room in the request budget for two calls and the pause', () => {
+    expect(AI_REQUEST_BUDGET_MS).toBeGreaterThan(2 * GEMINI_CALL_TIMEOUT_MS + 1500);
   });
 
   it('builds a real SDK-backed client when no generate function is injected', () => {
