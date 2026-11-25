@@ -25,6 +25,7 @@ LinkedIn post). The agent appends one row per step via `/finish-step`; humans ad
 | Fix 5 | 2026-11-25 | Gemini speed and model ids: API version v1beta ("-latest" aliases now resolve), low thinking for Gemini 3 models, 4096 output tokens, 20 s per call / 45 s per request, 404 model ids skipped to the next backup | `src/server/ai/geminiClient.ts`, `src/server/ai/aiClient.ts` | 3 / 401 | 96% lines, 84.85% branches, 87.11% functions (global) | – |
 | Fix 6 | 2026-11-25 | Validator false alarms: everyday "one" and the word "two-wheeler" (our own mode label) no longer count as invented numbers; placeholders written as `{{ ID }}` are normalised; prompt lists the allowed words | `src/server/ai/grounding.ts`, `src/server/ai/prompts.ts` | 2 / 403 | 96.01% lines, 84.87% branches, 87.15% functions (global) | – |
 | Fix 7 | 2026-11-25 | Lighter Gemini answers: at most 5 indoor and 2 community actions, shorter text, minimal thinking for Gemini 3 Flash models — roughly halves what the model has to write, so plans finish inside the time limit more often | `src/shared/aiSchemas.ts`, `src/domain/fallbackPlan.ts`, `src/server/ai/prompts.ts`, `src/server/ai/geminiClient.ts` | 0 / 403 | 96.01% lines, 84.89% branches, 87.15% functions (global) | – |
+| Fix 8 | 2026-11-26 | Diagnosed with `scripts/diagnose-gemini.mjs`: the free tier allows 20 requests per model per day, and a working answer was rejected because Gemini wrote fact ids without braces. Known ids are now wrapped automatically and the prompt says to keep the braces | `src/server/ai/grounding.ts`, `src/server/ai/prompts.ts` | 2 / 405 | 96.02% lines, 84.96% branches, 87.34% functions (global) | Free-tier quota is too small for judging |
 
 ## Prompt evolution notes
 
@@ -51,6 +52,9 @@ Record what had to change in a prompt and why (this is the "how prompts evolved"
 - Fix 7: measured the request offline — the prompt is small (about 4k tokens for the Delhi preset)
   but the answer asked for up to 15 explained items. Asking for the 5 most useful indoor actions
   and 2 community actions makes Gemini's answer much shorter and faster.
+- Fix 8: a diagnostic script sent the app's exact request four ways. Gemini answered in about 4 s,
+  so the request format was fine; failures were the free-tier limit (20 requests per model per
+  day) and answers that wrote `act_a1_usual_window` instead of `{{act_a1_usual_window}}`.
 
 ## Submissions
 

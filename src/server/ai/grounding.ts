@@ -18,6 +18,47 @@ export function normalizePlaceholders(raw: string): string {
   return raw.replace(/\{\{\s*([A-Za-z0-9_]+)\s*\}\}/g, (_m, id: string) => `{{${id.toLowerCase()}}}`);
 }
 
+/**
+ * Models sometimes write a fact id without its braces ("act_a1_usual_window" instead of
+ * "{{act_a1_usual_window}}"). When a bare word is exactly a known fact id, add the braces so the
+ * answer is not rejected and the UI can show the real number.
+ */
+export function wrapBareFactIds(text: string, knownFactIds: ReadonlySet<string>): string {
+  return text.replace(/\{\{[^}]*\}\}|\b[a-z][a-z0-9]*_[a-z0-9_]*\b/g, (token) =>
+    !token.startsWith('{{') && knownFactIds.has(token) ? `{{${token}}}` : token,
+  );
+}
+
+function repairPlanText(plan: AiPlanType, ids: ReadonlySet<string>): AiPlanType {
+  const fix = (text: string): string => wrapBareFactIds(text, ids);
+  return {
+    ...plan,
+    summary: fix(plan.summary),
+    routine: plan.routine.map((r) => ({
+      ...r,
+      headline: fix(r.headline),
+      why: fix(r.why),
+      tradeoff: r.tradeoff === null ? null : fix(r.tradeoff),
+    })),
+    indoor: plan.indoor.map((a) => ({ ...a, headline: fix(a.headline), why: fix(a.why) })),
+    community: plan.community.map((a) => ({ ...a, headline: fix(a.headline), why: fix(a.why) })),
+    caveats: plan.caveats.map(fix),
+  };
+}
+
+function repairExplanationText(
+  explanation: AiIndoorExplanationType,
+  ids: ReadonlySet<string>,
+): AiIndoorExplanationType {
+  const fix = (text: string): string => wrapBareFactIds(text, ids);
+  return {
+    ...explanation,
+    summary: fix(explanation.summary),
+    actions: explanation.actions.map((a) => ({ ...a, headline: fix(a.headline), why: fix(a.why) })),
+    caveats: explanation.caveats.map(fix),
+  };
+}
+
 const NUMBER_WORDS_REGEX =
   /\b(zero|two|three|four|five|six|seven|eight|nine|ten|eleven|twelve|thirteen|fourteen|fifteen|sixteen|seventeen|eighteen|nineteen|twenty|thirty|forty|fifty|sixty|seventy|eighty|ninety|hundred|thousand|lakh|crore|percent|half|double|twice|dozen)\b/i;
 
@@ -131,8 +172,8 @@ export function validatePlan(
     };
   }
 
-  const plan = parsed.data;
   const knownFactIds = new Set(facts.map((f) => f.id));
+  const plan = repairPlanText(parsed.data, knownFactIds);
 
   const candidateItemMap = new Map<string, Set<string>>();
   for (const act of candidates.activities) {
@@ -183,8 +224,8 @@ export function validateIndoorExplanation(
     };
   }
 
-  const explanation = parsed.data;
   const knownFactIds = new Set(facts.map((f) => f.id));
+  const explanation = repairExplanationText(parsed.data, knownFactIds);
   validateActionList(
     explanation.actions,
     new Set(candidates.indoor.map((a) => a.actionId)),

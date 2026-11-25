@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { validatePlan, validateIndoorExplanation } from './grounding.js';
+import { validatePlan, validateIndoorExplanation, wrapBareFactIds } from './grounding.js';
 import type { Candidates, Fact } from '../../shared/schemas.js';
 import type { AiPlan } from '../../shared/aiSchemas.js';
 
@@ -238,6 +238,27 @@ describe('grounding validator - validatePlan', () => {
     const result = validatePlan(JSON.stringify(plan), dummyFacts, dummyCandidates);
     expect(result.ok).toBe(true);
     if (result.ok) expect(result.plan.summary).toBe('Air is {{air_category_now}} today.');
+  });
+
+  it('adds missing braces around known fact ids (the answer Gemini actually gave)', () => {
+    const plan = parsePlan(validPlanJson);
+    plan.routine[0]!.why = 'Playing at act_park_best_window keeps the dose act_park_dose_change.';
+    const result = validatePlan(JSON.stringify(plan), dummyFacts, dummyCandidates);
+    expect(result.ok).toBe(true);
+    if (result.ok) {
+      expect(result.plan.routine[0]!.why).toBe(
+        'Playing at {{act_park_best_window}} keeps the dose {{act_park_dose_change}}.',
+      );
+    }
+  });
+
+  it('only wraps exact known ids and leaves everything else alone', () => {
+    const ids = new Set(['act_a1_usual_window']);
+    expect(wrapBareFactIds('Go at act_a1_usual_window.', ids)).toBe('Go at {{act_a1_usual_window}}.');
+    expect(wrapBareFactIds('Go at {{act_a1_usual_window}}.', ids)).toBe('Go at {{act_a1_usual_window}}.');
+    expect(wrapBareFactIds('see act_a1_usual_window_extra or some_other_word', ids)).toBe(
+      'see act_a1_usual_window_extra or some_other_word',
+    );
   });
 });
 
