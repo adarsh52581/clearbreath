@@ -6,6 +6,7 @@ import {
   classifyGeminiError,
   createGeminiClient,
   GEMINI_CALL_TIMEOUT_MS,
+  modelChain,
   type GenerateFn,
 } from './geminiClient.js';
 
@@ -58,14 +59,14 @@ describe('createGeminiClient', () => {
 
   it('switches to the fallback model when the main one is overloaded', async () => {
     const { generate, models } = scripted(overloaded, '{"ok":true}');
-    const client = createGeminiClient({ apiKey: 'k', model: 'main', fallbackModel: 'backup', generate, sleep: noSleep });
+    const client = createGeminiClient({ apiKey: 'k', model: 'main', fallbackModels: ['backup'], generate, sleep: noSleep });
     await expect(client.generateJson(args())).resolves.toBe('{"ok":true}');
     expect(models).toEqual(['main', 'backup']);
   });
 
   it('uses the fallback model on quota errors, but never retries the same model', async () => {
     const withFallback = scripted(quota, '{"ok":true}');
-    const a = createGeminiClient({ apiKey: 'k', model: 'main', fallbackModel: 'backup', generate: withFallback.generate, sleep: noSleep });
+    const a = createGeminiClient({ apiKey: 'k', model: 'main', fallbackModels: ['backup'], generate: withFallback.generate, sleep: noSleep });
     await expect(a.generateJson(args())).resolves.toBe('{"ok":true}');
     expect(withFallback.models).toEqual(['main', 'backup']);
 
@@ -77,7 +78,7 @@ describe('createGeminiClient', () => {
 
   it('does not retry other errors and keeps the provider message for the logs', async () => {
     const { generate, models } = scripted(badRequest);
-    const client = createGeminiClient({ apiKey: 'k', model: 'main', fallbackModel: 'backup', generate, sleep: noSleep });
+    const client = createGeminiClient({ apiKey: 'k', model: 'main', fallbackModels: ['backup'], generate, sleep: noSleep });
     const err = await client.generateJson(args()).catch((e: unknown) => e);
     expect(err).toBeInstanceOf(AppError);
     expect((err as AppError).code).toBe('UPSTREAM_UNAVAILABLE');
@@ -119,13 +120,44 @@ describe('createGeminiClient', () => {
   it('tries the fallback model when the first call runs out of time', async () => {
     const slow = Object.assign(new Error('The operation was aborted due to timeout'), { name: 'TimeoutError' });
     const { generate, models } = scripted(slow, '{"ok":true}');
-    const client = createGeminiClient({ apiKey: 'k', model: 'main', fallbackModel: 'backup', generate, sleep: noSleep });
+    const client = createGeminiClient({ apiKey: 'k', model: 'main', fallbackModels: ['backup'], generate, sleep: noSleep });
     await expect(client.generateJson(args())).resolves.toBe('{"ok":true}');
     expect(models).toEqual(['main', 'backup']);
   });
 
   it('leaves room in the request budget for two calls and the pause', () => {
     expect(AI_REQUEST_BUDGET_MS).toBeGreaterThan(2 * GEMINI_CALL_TIMEOUT_MS + 1500);
+  });
+
+  it('walks through several backup models in order', async () => {
+    const { generate, models } = scripted(overloaded, overloaded, '{"ok":true}');
+    const client = createGeminiClient({ apiKey: 'k', model: 'main', fallbackModels: ['b1', 'b2'], generate, sleep: noSleep });
+    await expect(client.generateJson(args())).resolves.toBe('{"ok":true}');
+    expect(models).toEqual(['main', 'b1', 'b2']);
+  });
+
+  it('stops after the last backup model', async () => {
+    const { generate, models } = scripted(overloaded, overloaded, overloaded, '{"never":"used"}');
+    const client = createGeminiClient({ apiKey: 'k', model: 'main', fallbackModels: ['b1', 'b2'], generate, sleep: noSleep });
+    await expect(client.generateJson(args())).rejects.toMatchObject({ code: 'UPSTREAM_UNAVAILABLE' });
+    expect(models).toEqual(['main', 'b1', 'b2']);
+  });
+
+  it('pauses longer before each further try, up to 4 seconds', async () => {
+    const { generate } = scripted(overloaded, overloaded, overloaded, overloaded, '{"ok":true}');
+    const pauses: number[] = [];
+    const sleep = (ms: number): Promise<void> => {
+      pauses.push(ms);
+      return Promise.resolve();
+    };
+    const client = createGeminiClient({ apiKey: 'k', model: 'main', fallbackModels: ['b1', 'b2', 'b3', 'b4'], generate, sleep });
+    await expect(client.generateJson(args())).resolves.toBe('{"ok":true}');
+    expect(pauses).toEqual([1500, 3000, 4000, 4000]);
+  });
+
+  it('builds the model chain without blanks or duplicates', () => {
+    expect(modelChain('main', [' b1 ', '', 'main', 'b1', 'b2'])).toEqual(['main', 'b1', 'b2']);
+    expect(modelChain('main')).toEqual(['main']);
   });
 
   it('builds a real SDK-backed client when no generate function is injected', () => {

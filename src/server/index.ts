@@ -33,7 +33,7 @@ const airService = createAirService({
 const aiClient = createGeminiClient({
   apiKey: config.geminiApiKey ?? '',
   model: config.geminiModel,
-  fallbackModel: config.geminiFallbackModel,
+  fallbackModels: config.geminiFallbackModels,
 });
 const planService = createPlanService({
   airService,

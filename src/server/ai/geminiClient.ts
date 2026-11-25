@@ -12,9 +12,9 @@ export type GenerateFn = (model: string, args: GenerateJsonArgs) => Promise<{ te
 export interface GeminiClientOptions {
   apiKey: string;
   model: string;
-  /** Optional second model, used when the main one is overloaded (503) or out of quota (429). */
-  fallbackModel?: string;
-  /** Pause before the second try. */
+  /** Optional backup models, tried in order when the main one is overloaded (503), slow, or out of quota (429). */
+  fallbackModels?: readonly string[];
+  /** Pause before the first retry; it doubles for each further retry (max 4 s). */
   retryDelayMs?: number;
   generate?: GenerateFn;
   sleep?: (ms: number, signal: AbortSignal) => Promise<void>;
@@ -115,36 +115,51 @@ async function attempt(generate: GenerateFn, model: string, args: GenerateJsonAr
   }
 }
 
-/** Picks the model for a second try, or null when a retry cannot help. */
-function retryModel(kind: FailureKind, model: string, fallbackModel?: string): string | null {
-  const fallback = fallbackModel && fallbackModel !== model ? fallbackModel : null;
-  if (kind === 'overloaded' || kind === 'timeout') return fallback ?? model; // usually brief
-  if (kind === 'rate-limited') return fallback; // same model, same quota: pointless
+const MAX_PAUSE_MS = 4000;
+
+/** Main model first, then the backups, without blanks or duplicates. */
+export function modelChain(model: string, fallbacks: readonly string[] = []): string[] {
+  return [...new Set([model, ...fallbacks].map((m) => m.trim()).filter((m) => m.length > 0))];
+}
+
+/** Picks the model for the next try, or null when another try cannot help. */
+function nextModel(kind: FailureKind, chain: readonly string[], index: number): string | null {
+  const next = chain[index + 1] ?? null;
+  if (kind === 'overloaded' || kind === 'timeout') {
+    // No backups configured: give the same model one more chance (demand spikes are often brief).
+    if (next === null && chain.length === 1 && index === 0) return chain[0] ?? null;
+    return next;
+  }
+  if (kind === 'rate-limited') return next; // a different model has its own quota
   return null;
 }
 
 export function createGeminiClient(options: GeminiClientOptions): AiClient {
-  const { model, fallbackModel, retryDelayMs = 1500 } = options;
+  const { model, fallbackModels = [], retryDelayMs = 1500 } = options;
+  const chain = modelChain(model, fallbackModels);
   const generate = options.generate ?? sdkGenerate(options.apiKey);
   const sleep = options.sleep ?? abortableSleep;
 
   return {
     async generateJson(args: GenerateJsonArgs): Promise<string> {
-      const first = await attempt(generate, model, args);
-      if (first.ok) return first.text;
+      let index = 0;
+      let current = chain[0] ?? model;
+      for (;;) {
+        const result = await attempt(generate, current, args);
+        if (result.ok) return result.text;
 
-      const secondModel = retryModel(first.kind, model, fallbackModel);
-      if (!secondModel || args.signal.aborted) throw toAppError(first.error, args.signal);
+        const next = nextModel(result.kind, chain, index);
+        if (next === null || args.signal.aborted) throw toAppError(result.error, args.signal);
 
-      logEvent('info', 'Retrying Gemini', { reason: first.kind, model: secondModel });
-      try {
-        await sleep(retryDelayMs, args.signal);
-      } catch {
-        throw toAppError(first.error, args.signal);
+        logEvent('info', 'Retrying Gemini', { reason: result.kind, model: next });
+        try {
+          await sleep(Math.min(retryDelayMs * 2 ** index, MAX_PAUSE_MS), args.signal);
+        } catch {
+          throw toAppError(result.error, args.signal);
+        }
+        current = next;
+        index += 1;
       }
-      const second = await attempt(generate, secondModel, args);
-      if (second.ok) return second.text;
-      throw toAppError(second.error, args.signal);
     },
   };
 }

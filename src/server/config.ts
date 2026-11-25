@@ -22,8 +22,8 @@ export type Config = {
   appVersion: string;
   geminiApiKey?: string;
   geminiModel: string;
-  /** Optional second model used when the main one is overloaded or out of quota. */
-  geminiFallbackModel?: string;
+  /** Optional backup models (comma-separated in GEMINI_FALLBACK_MODEL), tried in order. */
+  geminiFallbackModels?: string[];
   openaqApiKey?: string;
   googleMapsApiKey?: string;
   forecastProvider: 'google' | 'openmeteo';
@@ -35,11 +35,19 @@ export type Config = {
 // ClearBreath needs JSON text back, so speech (-tts) and image (-image) models cannot work.
 const NON_TEXT_MODEL = /-(tts|image)(-|$)/i;
 
+function parseModelList(raw: string | undefined): string[] {
+  return (raw ?? '')
+    .split(',')
+    .map((id) => id.trim())
+    .filter((id) => id.length > 0);
+}
+
 function validateModelIds(env: z.infer<typeof envSchema>): void {
-  for (const [name, id] of [
+  const ids: [string, string][] = [
     ['GEMINI_MODEL', env.GEMINI_MODEL],
-    ['GEMINI_FALLBACK_MODEL', env.GEMINI_FALLBACK_MODEL ?? ''],
-  ] as const) {
+    ...parseModelList(env.GEMINI_FALLBACK_MODEL).map((id): [string, string] => ['GEMINI_FALLBACK_MODEL', id]),
+  ];
+  for (const [name, id] of ids) {
     if (NON_TEXT_MODEL.test(id.trim())) {
       throw new Error(
         `${name}=${id.trim()} is a speech or image model. Use a text model, e.g. one ending in -flash or -flash-lite.`,
@@ -89,7 +97,7 @@ export function loadConfig(rawEnv: Record<string, string | undefined> = process.
     appVersion: env.APP_VERSION,
     geminiApiKey: env.GEMINI_API_KEY,
     geminiModel: env.GEMINI_MODEL,
-    geminiFallbackModel: env.GEMINI_FALLBACK_MODEL?.trim() || undefined,
+    geminiFallbackModels: parseModelList(env.GEMINI_FALLBACK_MODEL),
     openaqApiKey: env.OPENAQ_API_KEY,
     googleMapsApiKey: env.GOOGLE_MAPS_API_KEY,
     forecastProvider: env.FORECAST_PROVIDER,
