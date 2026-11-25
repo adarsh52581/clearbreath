@@ -6,6 +6,7 @@ import type { AirReport, PlanRequest } from '../../shared/schemas.js';
 import type { AiPlan } from '../../shared/aiSchemas.js';
 import { HOUSEHOLD_PRESETS } from '../../domain/data/presets.js';
 import { TypedCache } from '../cache.js';
+import { AppError } from '../errors.js';
 
 class FakeAiClient implements AiClient {
   public callCount = 0;
@@ -176,6 +177,23 @@ describe('planService', () => {
     expect(response.meta.attempts).toBe(2);
     const plan = response.plan as AiPlan;
     expect(plan.summary).toContain('ClearBreath');
+  });
+
+  it('provider failure (rate limit) skips the corrective retry and falls back after 1 call', async () => {
+    const ai = new FakeAiClient();
+    ai.responses = [new AppError('RATE_LIMITED', 429, 'Gemini rate limit exceeded')];
+
+    const service = createPlanService({
+      airService: fakeAirService,
+      ai,
+      clock: () => '2026-11-23T12:00:00Z',
+    });
+
+    const response = await service.createPlan(defaultRequest);
+
+    expect(ai.callCount).toBe(1);
+    expect(response.meta.attempts).toBe(1);
+    expect(response.meta.origin).toBe('fallback');
   });
 
   it('timeout returns last-good when present in cache', async () => {

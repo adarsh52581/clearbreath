@@ -18,6 +18,7 @@ LinkedIn post). The agent appends one row per step via `/finish-step`; humans ad
 | 9 | 2026-11-25 | HouseholdPanel (6 presets, editable summary, notes counter, JSON/CSV uploads), usePlan hook, GroundedText, lazy-loaded PlanView (origin badge, routine cards, See the numbers, ImpactLedger, indoor/community/caveats), App integration | `src/web/components/HouseholdPanel.tsx`, `src/web/components/HouseholdSummaryForm.tsx`, `src/web/hooks/useHouseholdPanelLogic.ts`, `src/web/hooks/usePlan.ts`, `src/web/components/GroundedText.tsx`, `src/web/components/PlanView.tsx`, `src/web/App.tsx` | 15 / 346 | 95.85% lines, 84.14% branches, 88.12% functions (global) | Manual E2E check with real Gemini key on "Delhi — child with asthma" |
 | 10 | 2026-11-25 | Indoor air simulator (instant domain calculation, SVG bar comparison, m³/h↔CFM toggle, plants honest check, source warnings) and `POST /api/iaq/explain` with Gemini grounding/cache/fallback | `src/server/services/iaqService.ts`, `src/server/routes/iaq.ts`, `src/web/components/IndoorSimulator.tsx`, `src/web/components/IndoorControls.tsx`, `src/web/components/OriginBadge.tsx`, `src/domain/fallbackPlan.ts`, `src/server/ai/prompts.ts` | 11 / 357 | 95.71% lines, 84.3% branches, 86.64% functions (global) | Manual E2E check with real Gemini key on "Explain my setup" |
 | 11 | 2026-11-25 | Hardening pass: base `/api` rate limiter, enhanced bundle secret scan in `check` & CI, raised coverage thresholds (85/85/80/85, `domain` ≥ 95% lines), WCAG contrast token test, `postIaqExplain` client test, README evidence map | `scripts/check-bundle-secrets.mjs`, `vitest.config.ts`, `src/server/app.ts`, `src/web/styles.test.ts`, `src/web/api/client.test.ts`, `package.json`, `.github/workflows/ci.yml`, `README.md` | 13 / 370 | 95.8% lines, 84.15% branches, 86.68% functions (global); `domain` 95.75% lines | Optional Playwright E2E not requested |
+| Fix | 2026-11-25 | Dev white screen fixed (browser API client moved out of the Vite `/api` proxy path, guard test), dev redirect :8080 → :5173, `.env.example` restored, `@google/genai` 0.3 → 3.6 with `responseJsonSchema`, secret-free AI failure logging and no second call on provider errors, Noida + Gurugram cities, bundle scan for AQ.-style keys and real key values | `src/web/lib/apiClient.ts`, `src/web/devServer.test.ts`, `src/server/app.ts`, `src/server/log.ts`, `src/server/ai/retryPolicy.ts`, `src/server/ai/geminiClient.ts`, `src/server/services/*Service.ts`, `src/domain/data/cities.ts`, `scripts/check-bundle-secrets.mjs` | 9 / 379 | 95.84% lines, 84.56% branches, 86.62% functions (global) | Verify Gemini end-to-end with a real key |
 
 ## Prompt evolution notes
 
@@ -25,6 +26,11 @@ Record what had to change in a prompt and why (this is the "how prompts evolved"
 
 - Step 0: Decided on "numbers from code, words from Gemini" with `{{fact_id}}` placeholders so the
   model can never originate a figure.
+- Fix after Step 11: the UI was blank in `npm run dev` because the browser API client lived in
+  `src/web/api/`, whose dev URL (`/api/client.ts`) matched the Vite proxy and was sent to Express.
+  Tests and the production build could not catch it; a guard test now fails if anything under
+  `src/web` starts with "api". The agent had also installed a year-old Gemini SDK; prompts for
+  dependency work now say "install the latest version and check the official docs".
 
 ## Submissions
 

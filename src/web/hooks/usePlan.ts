@@ -7,7 +7,7 @@ import type {
   PlanResponse,
   UploadedSeries,
 } from '../../shared/schemas.js';
-import { isApiError, postPlan as apiPostPlan } from '../api/client.js';
+import { isApiError, postPlan as apiPostPlan } from '../lib/apiClient.js';
 
 export type UsePlanStatus = 'idle' | 'loading' | 'success' | 'error';
 

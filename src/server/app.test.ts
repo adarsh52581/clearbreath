@@ -105,4 +105,19 @@ describe('app', () => {
       }
     }
   });
+
+  it('redirects GET / to the Vite dev server in development', async () => {
+    const app = createApp({ config: { ...testConfig, nodeEnv: 'development' } });
+    const response = await request(app).get('/');
+
+    expect(response.status).toBe(302);
+    expect(response.headers.location).toBe('http://localhost:5173/');
+  });
+
+  it('does not redirect GET / outside development', async () => {
+    const app = createApp({ config: testConfig });
+    const response = await request(app).get('/');
+
+    expect(response.status).not.toBe(302);
+  });
 });

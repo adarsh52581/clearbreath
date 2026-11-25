@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import { describe, it, expect, vi } from 'vitest';
-import { getCities, getAir, postPlan, postIaqExplain, isApiError } from './client.js';
+import { getCities, getAir, postPlan, postIaqExplain, isApiError } from './apiClient.js';
 import type { AirReport, IaqExplainRequest, PlanRequest } from '../../shared/schemas.js';
 
 const sampleReport: AirReport = {
@@ -12,7 +12,7 @@ const sampleReport: AirReport = {
   fetchedAtUtc: '2026-11-24T12:00:00.000Z',
 };
 
-describe('api/client', () => {
+describe('lib/apiClient', () => {
   it('getCities validates and returns city list', async () => {
     const fetchFn = vi.fn().mockResolvedValue(
       new Response(

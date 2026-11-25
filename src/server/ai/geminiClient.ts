@@ -14,10 +14,12 @@ export function createGeminiClient(apiKey: string, model: string): AiClient {
           config: {
             systemInstruction: system,
             responseMimeType: 'application/json',
-            responseSchema: schema,
+            // Our schema is standard JSON Schema (from zod), so it goes in responseJsonSchema.
+            responseJsonSchema: schema,
             temperature: 0.3,
             maxOutputTokens: 2048,
             thinkingConfig: { includeThoughts: false },
+            abortSignal: signal,
             httpOptions: { timeout: 20000 },
           },
         });

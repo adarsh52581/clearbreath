@@ -2,7 +2,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { renderHook, waitFor, act } from '@testing-library/react';
 import { useAir, clearAirCache } from './useAir.js';
-import { ApiError } from '../api/client.js';
+import { ApiError } from '../lib/apiClient.js';
 import type { AirReport } from '../../shared/schemas.js';
 
 function makeReport(label: string): AirReport {

@@ -75,6 +75,14 @@ export function createApp({ config, airService, planService, iaqService }: AppDe
 
   app.use('/api', apiNotFoundHandler);
 
+  if (config.nodeEnv === 'development') {
+    // In development the UI is served by Vite on :5173 (npm run dev). Opening the API port
+    // in a browser would otherwise show "Cannot GET /", so send people to the UI instead.
+    app.get('/', (_req, res) => {
+      res.redirect(302, 'http://localhost:5173/');
+    });
+  }
+
   if (config.nodeEnv === 'production') {
     const webDistPath = path.resolve(process.cwd(), 'dist/web');
     const indexPath = path.join(webDistPath, 'index.html');

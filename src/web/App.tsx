@@ -15,7 +15,7 @@ import type {
   PlanResponse,
   UploadedSeries,
 } from '../shared/schemas.js';
-import { getCities, type ApiErrorPayload } from './api/client.js';
+import { getCities, type ApiErrorPayload } from './lib/apiClient.js';
 import { AqiCard } from './components/AqiCard.js';
 import { ForecastChart } from './components/ForecastChart.js';
 import { HouseholdPanel } from './components/HouseholdPanel.js';

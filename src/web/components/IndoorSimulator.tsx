@@ -20,7 +20,7 @@ import type {
   LocationRef,
   UploadedSeries,
 } from '../../shared/schemas.js';
-import { isApiError, postIaqExplain as apiPostIaqExplain } from '../api/client.js';
+import { isApiError, postIaqExplain as apiPostIaqExplain } from '../lib/apiClient.js';
 import { useI18n } from '../i18n/index.js';
 import { GroundedText } from './GroundedText.js';
 import { IndoorControls, type CadrUnit } from './IndoorControls.js';

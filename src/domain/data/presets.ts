@@ -73,7 +73,7 @@ export const HOUSEHOLD_PRESETS: readonly HouseholdProfile[] = [
     id: 'noida-senior-copd',
     title: 'Noida — senior couple, one with COPD',
     description: 'Senior couple in NCR; one with COPD managing high indoor hours and morning walk exposure.',
-    cityId: 'delhi',
+    cityId: 'noida',
     members: [
       { id: 'm1', label: 'Senior with COPD', ageGroup: 'older_adult', sensitivities: ['copd'] },
       { id: 'm2', label: 'Senior partner', ageGroup: 'older_adult', sensitivities: [] },

@@ -48,7 +48,7 @@ describe('GET /api/cities', () => {
     const res = await request(app).get('/api/cities');
     expect(res.status).toBe(200);
     const body = res.body as CitiesBody;
-    expect(body.cities).toHaveLength(10);
+    expect(body.cities).toHaveLength(12);
     const delhi = body.cities.find((c) => c.id === 'delhi');
     expect(delhi).toBeDefined();
     expect(delhi!.name).toBe('Delhi');

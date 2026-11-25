@@ -22,6 +22,8 @@ import { fallbackPlan } from '../../domain/fallbackPlan.js';
 import { validatePlan } from '../ai/grounding.js';
 import { getPlanSystemInstruction, buildPlanUserMessage, sanitizeNotes } from '../ai/prompts.js';
 import { AppError } from '../errors.js';
+import { logEvent } from '../log.js';
+import { clipErrors, isProviderFailure } from '../ai/retryPolicy.js';
 import { TypedCache } from '../cache.js';
 import type { AirService } from './airService.js';
 import type { AiClient } from '../ai/aiClient.js';
@@ -255,7 +257,7 @@ async function attemptGeneration(
   userPrompt: string,
   facts: readonly Fact[],
   candidates: Candidates,
-): Promise<{ ok: true; plan: AiPlan } | { ok: false; errors: string[] }> {
+): Promise<{ ok: true; plan: AiPlan } | { ok: false; errors: string[]; retryable: boolean }> {
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), 20000);
   try {
@@ -266,11 +268,12 @@ async function attemptGeneration(
       signal: controller.signal,
     });
     clearTimeout(timer);
-    return validatePlan(raw, facts, candidates);
+    const result = validatePlan(raw, facts, candidates);
+    return result.ok ? result : { ok: false, errors: result.errors, retryable: true };
   } catch (err) {
     clearTimeout(timer);
     const msg = err instanceof Error ? err.message : 'Unknown generation error';
-    return { ok: false, errors: [msg] };
+    return { ok: false, errors: [msg], retryable: !isProviderFailure(err) };
   }
 }
 
@@ -286,6 +289,10 @@ async function executeAiGeneration(
   if (res1.ok) {
     return { plan: res1.plan, attempts };
   }
+  logEvent('warn', 'AI plan attempt failed', { attempt: 1, errors: clipErrors(res1.errors) });
+  if (!res1.retryable) {
+    return { plan: null, attempts };
+  }
 
   attempts = 2;
   const correctiveMsg = `${userMessage}\n\nYour previous output failed validation: ${res1.errors.join('; ')}. Return corrected JSON only.`;
@@ -293,6 +300,7 @@ async function executeAiGeneration(
   if (res2.ok) {
     return { plan: res2.plan, attempts };
   }
+  logEvent('warn', 'AI plan attempt failed', { attempt: 2, errors: clipErrors(res2.errors) });
 
   return { plan: null, attempts };
 }

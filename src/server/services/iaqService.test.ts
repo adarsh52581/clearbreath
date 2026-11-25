@@ -4,6 +4,7 @@ import type { AirReport, IaqExplainRequest } from '../../shared/schemas.js';
 import type { AiClient } from '../ai/aiClient.js';
 import type { AirService } from './airService.js';
 import { createIaqService } from './iaqService.js';
+import { AppError } from '../errors.js';
 
 const baseProfile = HOUSEHOLD_PRESETS[0]!;
 
@@ -88,6 +89,25 @@ describe('iaqService', () => {
     expect(res.meta.attempts).toBe(2);
     expect(res.scenarios.length).toBeGreaterThan(0);
     expect(res.facts.some((f) => f.id === 'in_baseline_pm25')).toBe(true);
+  });
+
+  it('skips the corrective retry when the AI provider is unavailable', async () => {
+    const airService: AirService = {
+      getAirReport: vi.fn().mockResolvedValue(makeAir({ measuredPm25: 200 })),
+    };
+    const generateJson = vi
+      .fn()
+      .mockRejectedValue(new AppError('UPSTREAM_UNAVAILABLE', 502, 'Gemini upstream error'));
+    const service = createIaqService({
+      airService,
+      ai: { generateJson },
+      clock: () => '2026-11-25T06:00:00.000Z',
+    });
+
+    const res = await service.explainIaq(makeRequest());
+    expect(generateJson).toHaveBeenCalledTimes(1);
+    expect(res.meta.attempts).toBe(1);
+    expect(res.meta.origin).toBe('fallback');
   });
 
   it('uses gemini on valid JSON, caches subsequent identical requests, and skips live air calls for uploads', async () => {

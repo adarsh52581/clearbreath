@@ -3,7 +3,7 @@ import { describe, it, expect, vi } from 'vitest';
 import { renderHook, act } from '@testing-library/react';
 import { HOUSEHOLD_PRESETS } from '../../domain/data/presets.js';
 import type { PlanResponse } from '../../shared/schemas.js';
-import { ApiError } from '../api/client.js';
+import { ApiError } from '../lib/apiClient.js';
 import { usePlan } from './usePlan.js';
 
 const sampleProfile = HOUSEHOLD_PRESETS[0]!;

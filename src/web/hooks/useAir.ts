@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import type { AirReport, LocationRef } from '../../shared/schemas.js';
-import { getAir, isApiError, type ApiErrorPayload } from '../api/client.js';
+import { getAir, isApiError, type ApiErrorPayload } from '../lib/apiClient.js';
 
 const CACHE_TTL_MS = 5 * 60 * 1000;
 
