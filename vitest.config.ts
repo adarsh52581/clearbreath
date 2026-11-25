@@ -17,10 +17,13 @@ export default defineConfig({
         '**/__fixtures__/**',
       ],
       thresholds: {
-        lines: 70,
-        functions: 70,
-        branches: 60,
-        statements: 70,
+        lines: 85,
+        functions: 85,
+        branches: 80,
+        statements: 85,
+        'src/domain/**/*.ts': {
+          lines: 95,
+        },
       },
     },
   },

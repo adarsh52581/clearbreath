@@ -15,7 +15,7 @@
     "lint": "eslint .",
     "typecheck": "tsc --noEmit",
     "format": "prettier --write .",
-    "check": "npm run lint && npm run typecheck && npm run test:coverage && npm run build"
+    "check": "npm run lint && npm run typecheck && npm run test:coverage && npm run build && node scripts/check-bundle-secrets.mjs"
   },
   "dependencies": {
     "@google/genai": "^0.3.0",

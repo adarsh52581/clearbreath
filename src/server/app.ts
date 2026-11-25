@@ -1,5 +1,6 @@
 import express, { type Express } from 'express';
 import compression from 'compression';
+import rateLimit from 'express-rate-limit';
 import fs from 'node:fs';
 import path from 'node:path';
 import type { Config } from './config.js';
@@ -28,6 +29,23 @@ export function createApp({ config, airService, planService, iaqService }: AppDe
   configureSecurity(app);
   app.use(compression());
   app.use(express.json({ limit: '256kb' }));
+
+  const baseApiLimiter = rateLimit({
+    windowMs: 60 * 1000,
+    max: 120,
+    standardHeaders: 'draft-7',
+    legacyHeaders: false,
+    handler: (_req, res) => {
+      res.status(429).json({
+        error: {
+          code: 'RATE_LIMITED',
+          message: 'Too many requests. Please try again later.',
+          retryAfterSeconds: 60,
+        },
+      });
+    },
+  });
+  app.use('/api', baseApiLimiter);
 
   app.get('/api/health', (_req, res) => {
     res.json({

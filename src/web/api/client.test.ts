@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 import { describe, it, expect, vi } from 'vitest';
-import { getCities, getAir, postPlan, isApiError } from './client.js';
-import type { AirReport, PlanRequest } from '../../shared/schemas.js';
+import { getCities, getAir, postPlan, postIaqExplain, isApiError } from './client.js';
+import type { AirReport, IaqExplainRequest, PlanRequest } from '../../shared/schemas.js';
 
 const sampleReport: AirReport = {
   location: { label: 'Delhi', lat: 28.6139, lon: 77.209, cityId: 'delhi' },
@@ -148,6 +148,78 @@ describe('api/client', () => {
     expect(res.meta.origin).toBe('fallback');
     expect(fetchFn).toHaveBeenCalledWith(
       '/api/plan',
+      expect.objectContaining({
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+      }),
+    );
+  });
+
+  it('postIaqExplain posts JSON and validates IaqExplainResponse', async () => {
+    const body: IaqExplainRequest = {
+      profile: {
+        id: 'p1',
+        title: 'Test Family',
+        cityId: 'delhi',
+        members: [{ id: 'm1', label: 'Aarav', ageGroup: 'child', sensitivities: ['asthma'] }],
+        activities: [],
+        commutes: [],
+        home: {
+          roomAreaM2: 20,
+          ceilingHeightM: 3,
+          windowState: 'closed',
+          purifier: { present: false, cadrM3h: 0 },
+          cookingFuel: 'lpg',
+          kitchenExhaust: true,
+          incense: false,
+          mosquitoCoil: false,
+          smokingIndoors: false,
+          hoursIndoorsPerDay: 16,
+          plantsCount: 0,
+        },
+        constraints: { budget: 'low', rented: false, mobilityLimited: false },
+      },
+      location: { cityId: 'delhi' },
+      home: {
+        roomAreaM2: 20,
+        ceilingHeightM: 3,
+        windowState: 'closed',
+        purifier: { present: false, cadrM3h: 0 },
+        cookingFuel: 'lpg',
+        kitchenExhaust: true,
+        incense: false,
+        mosquitoCoil: false,
+        smokingIndoors: false,
+        hoursIndoorsPerDay: 16,
+        plantsCount: 0,
+      },
+      language: 'en',
+    };
+
+    const iaqPayload = {
+      facts: [],
+      scenarios: [],
+      explanation: {
+        summary: 'Close windows.',
+        actions: [],
+        caveats: [],
+      },
+      meta: {
+        origin: 'fallback',
+        attempts: 0,
+        generatedAtUtc: '2026-11-25T12:00:00.000Z',
+        warnings: [],
+      },
+    };
+
+    const fetchFn = vi.fn().mockResolvedValue(
+      new Response(JSON.stringify(iaqPayload), { status: 200 }),
+    );
+
+    const res = await postIaqExplain(body, fetchFn);
+    expect(res.meta.origin).toBe('fallback');
+    expect(fetchFn).toHaveBeenCalledWith(
+      '/api/iaq/explain',
       expect.objectContaining({
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },

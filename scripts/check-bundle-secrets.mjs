@@ -8,10 +8,17 @@ if (!fs.existsSync(distDir)) {
   process.exit(0);
 }
 
+const SECRET_MARKERS = [
+  'AIza',
+  'GEMINI_API_KEY',
+  'OPENAQ_API_KEY',
+  'X-Goog-Api-Key',
+];
+
 const SECRET_PATTERNS = [
   /AIza[0-9A-Za-z-_]{35}/,
   /openaq_[a-zA-Z0-9_-]{20,}/,
-  /sk-[a-zA-Z0-9]{20,}/,
+  /\bsk-[a-zA-Z0-9]{16,}/,
 ];
 
 function scanDir(dir) {
@@ -24,8 +31,19 @@ function scanDir(dir) {
       if (scanDir(fullPath)) {
         hasViolation = true;
       }
-    } else if (entry.isFile() && (entry.name.endsWith('.js') || entry.name.endsWith('.html'))) {
+    } else if (
+      entry.isFile() &&
+      (entry.name.endsWith('.js') || entry.name.endsWith('.css') || entry.name.endsWith('.html'))
+    ) {
       const content = fs.readFileSync(fullPath, 'utf8');
+      for (const marker of SECRET_MARKERS) {
+        if (content.includes(marker)) {
+          console.error(
+            `ERROR: Forbidden secret marker "${marker}" detected in bundle: ${fullPath}`,
+          );
+          hasViolation = true;
+        }
+      }
       for (const pattern of SECRET_PATTERNS) {
         if (pattern.test(content)) {
           console.error(
