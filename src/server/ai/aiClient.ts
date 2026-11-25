@@ -1,5 +1,5 @@
 /** Total time allowed for one AI request, including the client's retry on a second model. */
-export const AI_REQUEST_BUDGET_MS = 35_000;
+export const AI_REQUEST_BUDGET_MS = 45_000;
 
 export interface GenerateJsonArgs {
   readonly system: string;

@@ -15,9 +15,12 @@
   older SDK versions use `responseMimeType: 'application/json'` + `responseJsonSchema`). Generate
   the JSON Schema from the zod schema (`z.toJSONSchema` in zod 4); never maintain two schemas by hand.
 - `temperature: 0.3`, max output tokens 2048, the lowest thinking level the model supports.
-  Time limits: 15 s per model call and 35 s for the whole request (`AI_REQUEST_BUDGET_MS`), so a
+  Time limits: 20 s per model call and 45 s for the whole request (`AI_REQUEST_BUDGET_MS`), so a
   slow first call still leaves room for one retry. Speech (`-tts`) and image (`-image`) model ids
-  are rejected at startup.
+  are rejected at startup. Calls use API version `v1beta`; Gemini 3 models get
+  `thinkingLevel: LOW` (options are pre-computed, so deep thinking only adds latency);
+  `maxOutputTokens` is 4096 because thinking tokens count towards it. A model id that returns 404
+  is skipped and the next backup is tried.
 - Wrap it behind `interface AiClient { generateJson(args: { system: string; user: string; schema: object; signal: AbortSignal }): Promise<string> }`
   so tests use a `FakeAiClient` with scripted responses.
 - Map provider errors: 429 → `RATE_LIMITED`, 5xx/timeout → `UPSTREAM_UNAVAILABLE` (both trigger

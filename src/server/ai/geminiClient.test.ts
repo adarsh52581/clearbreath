@@ -7,6 +7,7 @@ import {
   createGeminiClient,
   GEMINI_CALL_TIMEOUT_MS,
   modelChain,
+  thinkingConfigFor,
   type GenerateFn,
 } from './geminiClient.js';
 
@@ -15,6 +16,9 @@ const overloaded = new Error(
 );
 const quota = new Error('{"error":{"code":429,"message":"Quota exceeded","status":"RESOURCE_EXHAUSTED"}}');
 const badRequest = new Error('{"error":{"code":400,"message":"Invalid argument","status":"INVALID_ARGUMENT"}}');
+const notFound = new Error(
+  '{"error":{"code":404,"message":"models/x is not found for API version v1","status":"NOT_FOUND"}}',
+);
 
 function args(signal: AbortSignal = new AbortController().signal): GenerateJsonArgs {
   return { system: 'sys', user: 'user', schema: { type: 'object' }, signal };
@@ -39,6 +43,7 @@ describe('classifyGeminiError', () => {
     expect(classifyGeminiError(Object.assign(new Error('x'), { status: 503 }))).toBe('overloaded');
     expect(classifyGeminiError(quota)).toBe('rate-limited');
     expect(classifyGeminiError(badRequest)).toBe('other');
+    expect(classifyGeminiError(notFound)).toBe('not-found');
   });
 });
 
@@ -153,6 +158,25 @@ describe('createGeminiClient', () => {
     const client = createGeminiClient({ apiKey: 'k', model: 'main', fallbackModels: ['b1', 'b2', 'b3', 'b4'], generate, sleep });
     await expect(client.generateJson(args())).resolves.toBe('{"ok":true}');
     expect(pauses).toEqual([1500, 3000, 4000, 4000]);
+  });
+
+  it('skips a model id that is not available and moves on to the next one', async () => {
+    const { generate, models } = scripted(notFound, '{"ok":true}');
+    const client = createGeminiClient({ apiKey: 'k', model: 'main', fallbackModels: ['b1'], generate, sleep: noSleep });
+    await expect(client.generateJson(args())).resolves.toBe('{"ok":true}');
+    expect(models).toEqual(['main', 'b1']);
+  });
+
+  it('does not retry the same model when its id is not available', async () => {
+    const { generate, models } = scripted(notFound, '{"never":"used"}');
+    const client = createGeminiClient({ apiKey: 'k', model: 'main', generate, sleep: noSleep });
+    await expect(client.generateJson(args())).rejects.toMatchObject({ code: 'UPSTREAM_UNAVAILABLE' });
+    expect(models).toEqual(['main']);
+  });
+
+  it('asks Gemini 3 models for low thinking and leaves other ids on their default', () => {
+    expect(thinkingConfigFor('gemini-3.6-flash')).toEqual({ thinkingLevel: 'LOW' });
+    expect(thinkingConfigFor('gemini-flash-lite-latest')).toBeUndefined();
   });
 
   it('builds the model chain without blanks or duplicates', () => {

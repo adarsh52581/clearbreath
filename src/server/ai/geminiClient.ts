@@ -1,10 +1,10 @@
-import { GoogleGenAI } from '@google/genai';
+import { GoogleGenAI, ThinkingLevel, type ThinkingConfig } from '@google/genai';
 import { AppError } from '../errors.js';
 import { logEvent } from '../log.js';
 import type { AiClient, GenerateJsonArgs } from './aiClient.js';
 
 /** One call may take at most this long, so a slow first model still leaves time for a second try. */
-export const GEMINI_CALL_TIMEOUT_MS = 15_000;
+export const GEMINI_CALL_TIMEOUT_MS = 20_000;
 
 /** Calls one Gemini model once; injected in tests. */
 export type GenerateFn = (model: string, args: GenerateJsonArgs) => Promise<{ text?: string }>;
@@ -20,7 +20,7 @@ export interface GeminiClientOptions {
   sleep?: (ms: number, signal: AbortSignal) => Promise<void>;
 }
 
-type FailureKind = 'overloaded' | 'timeout' | 'rate-limited' | 'other';
+type FailureKind = 'overloaded' | 'timeout' | 'rate-limited' | 'not-found' | 'other';
 type AttemptResult = { ok: true; text: string } | { ok: false; error: unknown; kind: FailureKind };
 
 function errorStatus(err: unknown): number | undefined {
@@ -37,6 +37,8 @@ export function classifyGeminiError(err: unknown): FailureKind {
   const status = errorStatus(err);
   const msg = err instanceof Error ? err.message : String(err);
   if (status === 429 || /resource.?exhausted|rate limit/i.test(msg)) return 'rate-limited';
+  // Model id not available to this key/API version: skip it and move on to the next model.
+  if (status === 404 || /not_found|is not found/i.test(msg)) return 'not-found';
   if (status === 500 || status === 503 || /unavailable|overloaded|high demand/i.test(msg)) {
     return 'overloaded';
   }
@@ -79,8 +81,18 @@ function abortableSleep(ms: number, signal: AbortSignal): Promise<void> {
   });
 }
 
+/**
+ * Gemini 3 models think before answering by default, which made full plans take over 15 s.
+ * Our options and numbers are pre-computed, so low thinking is enough and much faster.
+ * Other ids (e.g. "-latest" aliases) keep the model's default.
+ */
+export function thinkingConfigFor(model: string): ThinkingConfig | undefined {
+  return /^gemini-3/i.test(model) ? { thinkingLevel: ThinkingLevel.LOW } : undefined;
+}
+
 function sdkGenerate(apiKey: string): GenerateFn {
-  const ai = new GoogleGenAI({ apiKey });
+  // v1beta is the version Google's docs use; "-latest" aliases are not served on v1.
+  const ai = new GoogleGenAI({ apiKey, apiVersion: 'v1beta' });
   return (model, { system, user, schema, signal }) =>
     ai.models.generateContent({
       model,
@@ -91,8 +103,9 @@ function sdkGenerate(apiKey: string): GenerateFn {
         // Our schema is standard JSON Schema (from zod), so it goes in responseJsonSchema.
         responseJsonSchema: schema,
         temperature: 0.3,
-        maxOutputTokens: 2048,
-        thinkingConfig: { includeThoughts: false },
+        // Thinking tokens count towards this limit, so leave headroom to avoid cut-off JSON.
+        maxOutputTokens: 4096,
+        thinkingConfig: thinkingConfigFor(model),
         abortSignal: signal,
         httpOptions: { timeout: GEMINI_CALL_TIMEOUT_MS },
       },
@@ -130,7 +143,8 @@ function nextModel(kind: FailureKind, chain: readonly string[], index: number): 
     if (next === null && chain.length === 1 && index === 0) return chain[0] ?? null;
     return next;
   }
-  if (kind === 'rate-limited') return next; // a different model has its own quota
+  // A different model has its own quota; an unavailable id is simply skipped.
+  if (kind === 'rate-limited' || kind === 'not-found') return next;
   return null;
 }
 
