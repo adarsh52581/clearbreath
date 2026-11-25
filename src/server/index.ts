@@ -7,6 +7,7 @@ import { createOpenMeteoAdapter } from './adapters/openMeteo.js';
 import { createAirService } from './services/airService.js';
 import { createGeminiClient } from './ai/geminiClient.js';
 import { createPlanService } from './services/planService.js';
+import { createIaqService } from './services/iaqService.js';
 import type { AirReport } from '../shared/schemas.js';
 
 const config = loadConfig();
@@ -36,8 +37,14 @@ const planService = createPlanService({
   config: { geminiModel: config.geminiModel, grapStage: config.grapStage },
   clock: () => new Date().toISOString(),
 });
+const iaqService = createIaqService({
+  airService,
+  ai: aiClient,
+  config: { geminiModel: config.geminiModel },
+  clock: () => new Date().toISOString(),
+});
 
-const app = createApp({ config, airService, planService });
+const app = createApp({ config, airService, planService, iaqService });
 
 const server = app.listen(config.port, () => {
   const logEntry = JSON.stringify({

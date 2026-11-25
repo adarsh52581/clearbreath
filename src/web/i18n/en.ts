@@ -260,6 +260,48 @@ export const en = {
     noIndoor: 'No additional indoor actions suggested.',
     noCommunity: 'No community actions suggested.',
   },
+  indoor: {
+    heading: 'Indoor air simulator',
+    intro: 'Adjust your room setup to see instant estimated indoor PM2.5 changes.',
+    loadingLabel: 'Loading indoor air simulator…',
+    noOutdoorData: 'Waiting for outdoor PM2.5 data to estimate indoor air quality.',
+    roomAreaLabel: 'Room area (m²)',
+    ceilingHeightLabel: 'Ceiling height (m)',
+    windowStateLegend: 'Window state',
+    windowDescriptions: {
+      sealed: 'Draught-proofed or tightly sealed (lowest outdoor infiltration).',
+      closed: 'Standard closed windows with normal frame gaps.',
+      partly_open: 'Partially open for ventilation.',
+      open: 'Wide open; indoor air tracks outdoor pollution closely.',
+    },
+    purifierSwitchLabel: 'Air purifier running',
+    cadrLabel: 'Purifier CADR',
+    unitToggleLabel: 'CADR unit',
+    unitM3h: 'm³/h',
+    unitCfm: 'CFM',
+    plantsLabel: 'Potted plants',
+    plantsDecrease: 'Decrease plants',
+    plantsIncrease: 'Increase plants',
+    sourcesLegend: 'Indoor smoke & cooking sources',
+    sourceIncense: 'Incense / agarbatti',
+    sourceMosquitoCoil: 'Mosquito coil',
+    sourceCookingNoExhaust: 'Cooking without exhaust fan',
+    sourceSmoking: 'Smoking indoors',
+    estimatedPm25Label: 'Estimated indoor PM2.5',
+    vsOutdoorsLabel: 'vs outdoors',
+    recommendedCadrLabel: 'Recommended purifier CADR (5 ACH)',
+    chartHeading: 'Scenario comparison',
+    chartTitle: 'Estimated indoor PM2.5 across room scenarios in µg/m³',
+    plantsCalloutHeading: 'Honest check: plants',
+    plantsCalloutPrefix: 'Adding 10 plants changes estimated indoor PM2.5 by',
+    plantsCitationLabel: 'Source:',
+    sourcesWarningHeading: 'Indoor sources not included in the estimate',
+    sourcesWarningNote:
+      'These sources release fine particles indoors, so actual PM2.5 will be higher than the steady-state estimate above.',
+    explainButton: 'Explain my setup',
+    explainingButton: 'Explaining setup…',
+    explainErrorTitle: 'Could not explain indoor setup',
+  },
 } as const;
 
 export type Messages = {
@@ -385,5 +427,41 @@ export type Messages = {
     noRoutine: string;
     noIndoor: string;
     noCommunity: string;
+  };
+  indoor: {
+    heading: string;
+    intro: string;
+    loadingLabel: string;
+    noOutdoorData: string;
+    roomAreaLabel: string;
+    ceilingHeightLabel: string;
+    windowStateLegend: string;
+    windowDescriptions: { [K in keyof typeof en.indoor.windowDescriptions]: string };
+    purifierSwitchLabel: string;
+    cadrLabel: string;
+    unitToggleLabel: string;
+    unitM3h: string;
+    unitCfm: string;
+    plantsLabel: string;
+    plantsDecrease: string;
+    plantsIncrease: string;
+    sourcesLegend: string;
+    sourceIncense: string;
+    sourceMosquitoCoil: string;
+    sourceCookingNoExhaust: string;
+    sourceSmoking: string;
+    estimatedPm25Label: string;
+    vsOutdoorsLabel: string;
+    recommendedCadrLabel: string;
+    chartHeading: string;
+    chartTitle: string;
+    plantsCalloutHeading: string;
+    plantsCalloutPrefix: string;
+    plantsCitationLabel: string;
+    sourcesWarningHeading: string;
+    sourcesWarningNote: string;
+    explainButton: string;
+    explainingButton: string;
+    explainErrorTitle: string;
   };
 };

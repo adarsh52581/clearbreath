@@ -475,4 +475,21 @@ export const planResponseSchema = z.object({
 });
 export type PlanResponse = z.infer<typeof planResponseSchema>;
 
+export const iaqExplainRequestSchema = z.object({
+  profile: householdProfileSchema,
+  location: locationRefSchema,
+  home: homeSchema,
+  upload: uploadedSeriesSchema.optional(),
+  language: languageSchema,
+});
+export type IaqExplainRequest = z.infer<typeof iaqExplainRequestSchema>;
+
+export const iaqExplainResponseSchema = z.object({
+  facts: z.array(factSchema),
+  scenarios: z.array(indoorScenarioSchema),
+  explanation: z.any(), // detailed typing in aiSchemas.ts
+  meta: responseMetaSchema,
+});
+export type IaqExplainResponse = z.infer<typeof iaqExplainResponseSchema>;
+
 

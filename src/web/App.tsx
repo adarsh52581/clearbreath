@@ -7,6 +7,8 @@ import type {
   AirReport,
   City,
   HouseholdProfile,
+  IaqExplainRequest,
+  IaqExplainResponse,
   Language,
   LocationRef,
   PlanRequest,
@@ -27,11 +29,13 @@ import { usePlan } from './hooks/usePlan.js';
 import { I18nProvider, useI18n } from './i18n/index.js';
 
 const PlanView = lazy(() => import('./components/PlanView.js'));
+const IndoorSimulator = lazy(() => import('./components/IndoorSimulator.js'));
 
 export interface AppProps {
   readonly fetchAir?: (location: LocationRef) => Promise<AirReport>;
   readonly fetchCities?: () => Promise<City[]>;
   readonly postPlan?: (body: PlanRequest) => Promise<PlanResponse>;
+  readonly postIaqExplain?: (body: IaqExplainRequest) => Promise<IaqExplainResponse>;
   readonly clock?: () => number;
   readonly geolocation?: GeolocationLike;
 }
@@ -140,6 +144,7 @@ function AirDashboardContent({
   fetchAir,
   fetchCities,
   postPlan,
+  postIaqExplain,
   clock,
   geolocation,
 }: AppProps): ReactElement {
@@ -205,6 +210,15 @@ function AirDashboardContent({
           </button>
         </div>
         <PlanSection plan={plan} profile={profile} planHeadingRef={planHeadingRef} />
+        <Suspense fallback={<p className="text-sm text-ink-muted">{t.indoor.loadingLabel}</p>}>
+          <IndoorSimulator
+            profile={profile}
+            location={location}
+            air={displayedAir}
+            upload={uploadedAir}
+            postIaqExplain={postIaqExplain}
+          />
+        </Suspense>
       </div>
     </Layout>
   );

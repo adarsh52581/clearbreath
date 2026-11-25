@@ -8,16 +8,19 @@ import { apiNotFoundHandler, errorHandler } from './errors.js';
 import { createCitiesRouter } from './routes/cities.js';
 import { createAirRouter } from './routes/air.js';
 import { createPlanRouter } from './routes/plan.js';
+import { createIaqRouter } from './routes/iaq.js';
 import type { AirService } from './services/airService.js';
 import type { PlanService } from './services/planService.js';
+import type { IaqService } from './services/iaqService.js';
 
 export interface AppDeps {
   config: Config;
   airService?: AirService;
   planService?: PlanService;
+  iaqService?: IaqService;
 }
 
-export function createApp({ config, airService, planService }: AppDeps): Express {
+export function createApp({ config, airService, planService, iaqService }: AppDeps): Express {
   const app = express();
 
   app.set('trust proxy', 1); // Cloud Run — use client IP for rate limiting
@@ -45,6 +48,11 @@ export function createApp({ config, airService, planService }: AppDeps): Express
   // Plan route (rate-limited; requires planService)
   if (planService) {
     app.use('/api', createPlanRouter(planService));
+  }
+
+  // Indoor air explanation route (rate-limited; requires iaqService)
+  if (iaqService) {
+    app.use('/api', createIaqRouter(iaqService));
   }
 
   app.use('/api', apiNotFoundHandler);

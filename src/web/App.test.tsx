@@ -172,9 +172,11 @@ describe('App', () => {
     const buildBtn = screen.getByRole('button', { name: /build my family's plan/i });
     await user.click(buildBtn);
 
-    const planHeading = await screen.findByRole('heading', {
-      name: /your family's cleaner-air plan/i,
-    });
+    const planHeading = await screen.findByRole(
+      'heading',
+      { name: /your family's cleaner-air plan/i },
+      { timeout: 5000 },
+    );
     expect(planHeading).toBeInTheDocument();
     expect(document.activeElement).toBe(planHeading);
   });

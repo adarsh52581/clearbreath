@@ -1,5 +1,6 @@
 import type { Candidates, Fact, Language } from '../shared/schemas.js';
 import type {
+  AiIndoorExplanation,
   AiPlan,
   RoutinePlanItem,
   IndoorPlanItem,
@@ -105,6 +106,35 @@ export function fallbackPlan({
     routine: buildFallbackRoutine(candidates, isHi),
     indoor: buildFallbackIndoor(candidates.indoor, isHi),
     community,
+    caveats,
+  };
+}
+
+/**
+ * Deterministic fallback for POST /api/iaq/explain when Gemini is unavailable or fails twice.
+ * Implements AI_CONTRACT §6 & §8.
+ */
+export function fallbackIndoorExplanation({
+  candidates,
+  language,
+}: {
+  facts: readonly Fact[];
+  candidates: Candidates;
+  language: Language;
+}): AiIndoorExplanation {
+  const isHi = language === 'hi';
+
+  const summary = isHi
+    ? 'अनुमानित घर के अंदर PM2.5: {{in_baseline_pm25}}। AI व्याख्या अभी उपलब्ध नहीं है, इसलिए ये ClearBreath के गणना किए गए इनडोर उपाय हैं।'
+    : "Estimated indoor PM2.5: {{in_baseline_pm25}}. AI explanations are unavailable right now, so these are ClearBreath's computed indoor actions.";
+
+  const caveats = isHi
+    ? ['इनडोर अनुमान बिना किसी घरेलू धुएँ के स्रोत के स्थिर स्थिति पर आधारित हैं; ये चिकित्सीय माप नहीं हैं।']
+    : ['Indoor estimates assume steady-state conditions with no indoor smoke sources; they are not medical measurements.'];
+
+  return {
+    summary,
+    actions: buildFallbackIndoor(candidates.indoor, isHi),
     caveats,
   };
 }

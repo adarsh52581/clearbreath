@@ -27,6 +27,20 @@ export function getPlanSystemInstruction(language: Language): string {
   return PLAN_SYSTEM_INSTRUCTION_TEMPLATE.replace('{LANGUAGE_NAME}', langName);
 }
 
+const PLAN_JOB_PARAGRAPH =
+  'Your job: choose an option for every activity and commute, rank the indoor and community actions, and explain each choice so a busy parent or grandparent understands why it lowers this family\'s exposure and what difference it makes.';
+
+const IAQ_JOB_PARAGRAPH =
+  'Your job: rank the indoor actions for this home and explain which changes matter most, what they cost (free/low/medium/high) and how much they change the estimated indoor PM2.5, using only the facts given. Mention plainly when an action has little effect.';
+
+export function getIaqSystemInstruction(language: Language): string {
+  const langName =
+    language === 'hi' ? 'Hindi (Devanagari script)' : 'English (Indian usage)';
+  return PLAN_SYSTEM_INSTRUCTION_TEMPLATE
+    .replace(PLAN_JOB_PARAGRAPH, IAQ_JOB_PARAGRAPH)
+    .replace('{LANGUAGE_NAME}', langName);
+}
+
 /**
  * Sanitizes user notes according to AI_CONTRACT §4:
  * Trim; cap at 300 characters; remove control characters and < > { }; collapse whitespace; empty -> none.
@@ -96,4 +110,47 @@ ${JSON.stringify(minimalHousehold)}
 ${safeNotes}
 </user_notes>
 Create the plan JSON now.`;
+}
+
+/**
+ * Builds the user message for POST /api/iaq/explain (AI_CONTRACT §6).
+ */
+export function buildIaqUserMessage({
+  facts,
+  candidates,
+  profile,
+  cityName,
+  notes,
+}: BuildPlanUserMessageArgs): string {
+  const minimalFacts = facts.map((f) => ({
+    id: f.id,
+    label: f.label,
+    display: f.display,
+  }));
+
+  const minimalHousehold = {
+    city: cityName,
+    members: profile.members.map((m) => ({
+      memberId: m.id,
+      ageGroup: m.ageGroup,
+      sensitivities: m.sensitivities,
+    })),
+    constraints: profile.constraints,
+  };
+
+  const safeNotes = sanitizeNotes(notes ?? profile.notes);
+
+  return `<facts>
+${JSON.stringify(minimalFacts)}
+</facts>
+<candidates>
+${JSON.stringify({ indoor: candidates.indoor })}
+</candidates>
+<household>
+${JSON.stringify(minimalHousehold)}
+</household>
+<user_notes>
+${safeNotes}
+</user_notes>
+Create the indoor explanation JSON now.`;
 }

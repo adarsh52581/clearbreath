@@ -2,14 +2,17 @@ import { z } from 'zod';
 import {
   airReportSchema,
   citySchema,
+  iaqExplainResponseSchema,
   planResponseSchema,
   type AirReport,
   type City,
+  type IaqExplainRequest,
+  type IaqExplainResponse,
   type LocationRef,
   type PlanRequest,
   type PlanResponse,
 } from '../../shared/schemas.js';
-import { aiPlanSchema } from '../../shared/aiSchemas.js';
+import { aiIndoorExplanationSchema, aiPlanSchema } from '../../shared/aiSchemas.js';
 
 export type ApiErrorKind = 'network' | 'rate-limited' | 'validation' | 'server';
 
@@ -38,6 +41,10 @@ const citiesResponseSchema = z.object({
 
 const strictPlanResponseSchema = planResponseSchema.extend({
   plan: aiPlanSchema,
+});
+
+const strictIaqExplainResponseSchema = iaqExplainResponseSchema.extend({
+  explanation: aiIndoorExplanationSchema,
 });
 
 function mapStatusToError(status: number): ApiError {
@@ -111,6 +118,22 @@ export async function postPlan(
       body: JSON.stringify(body),
     },
     strictPlanResponseSchema,
+    fetchFn,
+  );
+}
+
+export async function postIaqExplain(
+  body: IaqExplainRequest,
+  fetchFn: typeof fetch = fetch,
+): Promise<IaqExplainResponse> {
+  return requestJson(
+    '/api/iaq/explain',
+    {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+    },
+    strictIaqExplainResponseSchema,
     fetchFn,
   );
 }
