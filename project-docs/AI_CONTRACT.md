@@ -17,8 +17,9 @@
 - `temperature: 0.3`, max output tokens 2048, the lowest thinking level the model supports.
   Time limits: 20 s per model call and 45 s for the whole request (`AI_REQUEST_BUDGET_MS`), so a
   slow first call still leaves room for one retry. Speech (`-tts`) and image (`-image`) model ids
-  are rejected at startup. Calls use API version `v1beta`; Gemini 3 models get
-  `thinkingLevel: LOW` (options are pre-computed, so deep thinking only adds latency);
+  are rejected at startup. Calls use API version `v1beta`; Gemini 3 Flash models get
+  `thinkingLevel: MINIMAL` (LOW for other Gemini 3 models) because options are pre-computed and deep
+  thinking only adds latency;
   `maxOutputTokens` is 4096 because thinking tokens count towards it. A model id that returns 404
   is skipped and the next backup is tried.
 - Wrap it behind `interface AiClient { generateJson(args: { system: string; user: string; schema: object; signal: AbortSignal }): Promise<string> }`
@@ -52,7 +53,7 @@ Hard rules:
 5. Be honest about small effects. If an option's facts show little or no benefit (for example potted plants), say so plainly.
 6. Prefer the option marked recommended unless the household's constraints or notes clearly argue otherwise; if you choose another option, explain the trade-off.
 7. Respect constraints such as budget, rented home and limited mobility. When benefits are similar, put free and low-cost actions first.
-8. Write in {LANGUAGE_NAME}. Plain, warm and specific; no fear-mongering. Headlines up to 110 characters; explanations up to 280 characters.
+8. Write in {LANGUAGE_NAME}. Plain, warm and specific; no fear-mongering. Be brief: headlines under 90 characters, explanations under 200 characters, at most 5 indoor actions and 2 community actions (the most useful for this family).
 9. Return only JSON that matches the provided schema.
 ```
 
@@ -107,14 +108,14 @@ export const AiPlan = z.object({
     tradeoff: z.string().max(200).nullable(),
     priority: Priority,
   })).max(15),
-  indoor: z.array(z.object({ actionId: z.string().max(64), headline: Text110, why: Text280, priority: Priority })).max(10),
-  community: z.array(z.object({ actionId: z.string().max(64), headline: Text110, why: Text280 })).max(3),
+  indoor: z.array(z.object({ actionId: z.string().max(64), headline: Text110, why: Text280, priority: Priority })).max(5),
+  community: z.array(z.object({ actionId: z.string().max(64), headline: Text110, why: Text280 })).max(2),
   caveats: z.array(z.string().min(1).max(200)).max(3),
 });
 
 export const AiIndoorExplanation = z.object({
   summary: z.string().min(1).max(320),
-  actions: z.array(z.object({ actionId: z.string().max(64), headline: Text110, why: Text280, priority: Priority })).max(10),
+  actions: z.array(z.object({ actionId: z.string().max(64), headline: Text110, why: Text280, priority: Priority })).max(5),
   caveats: z.array(z.string().min(1).max(200)).max(3),
 });
 ```

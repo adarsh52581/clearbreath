@@ -18,7 +18,7 @@ Hard rules:
 5. Be honest about small effects. If an option's facts show little or no benefit (for example potted plants), say so plainly.
 6. Prefer the option marked recommended unless the household's constraints or notes clearly argue otherwise; if you choose another option, explain the trade-off.
 7. Respect constraints such as budget, rented home and limited mobility. When benefits are similar, put free and low-cost actions first.
-8. Write in {LANGUAGE_NAME}. Plain, warm and specific; no fear-mongering. Headlines up to 110 characters; explanations up to 280 characters.
+8. Write in {LANGUAGE_NAME}. Plain, warm and specific; no fear-mongering. Be brief: headlines under 90 characters, explanations under 200 characters, at most 5 indoor actions and 2 community actions (the most useful for this family).
 9. Return only JSON that matches the provided schema.`;
 
 export function getPlanSystemInstruction(language: Language): string {

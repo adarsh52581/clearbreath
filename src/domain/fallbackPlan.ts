@@ -58,7 +58,7 @@ function buildFallbackRoutine(candidates: Candidates, isHi: boolean): RoutinePla
 
 function buildFallbackIndoor(indoor: Candidates['indoor'], isHi: boolean): IndoorPlanItem[] {
   const result: IndoorPlanItem[] = [];
-  for (const act of indoor.slice(0, 10)) {
+  for (const act of indoor.slice(0, 5)) {
     const changeFactId = act.factIds.find((id) => id.startsWith('in_') && id.endsWith('_change'));
     let whyText = `{{${act.factIds[0]}}}`;
     if (changeFactId) {
@@ -91,7 +91,7 @@ export function fallbackPlan({
     ? 'अभी वायु गुणवत्ता: {{air_category_now}} ({{air_naqi_basis}})। AI व्याख्या अभी उपलब्ध नहीं है, इसलिए ये ClearBreath के गणना किए गए सबसे कम-संपर्क वाले विकल्प हैं।'
     : "Air quality now: {{air_category_now}} ({{air_naqi_basis}}). AI explanations are unavailable right now, so these are ClearBreath's computed lowest-exposure options.";
 
-  const community: CommunityPlanItem[] = candidates.community.slice(0, 3).map((act) => ({
+  const community: CommunityPlanItem[] = candidates.community.slice(0, 2).map((act) => ({
     actionId: act.actionId,
     headline: act.label,
     why: `{{${act.factIds[0]}}}`,

@@ -34,8 +34,8 @@ export type CommunityPlanItem = z.infer<typeof communityPlanItemSchema>;
 export const aiPlanSchema = z.object({
   summary: z.string().min(1).max(320),
   routine: z.array(routinePlanItemSchema).max(15),
-  indoor: z.array(indoorPlanItemSchema).max(10),
-  community: z.array(communityPlanItemSchema).max(3),
+  indoor: z.array(indoorPlanItemSchema).max(5),
+  community: z.array(communityPlanItemSchema).max(2),
   caveats: z.array(z.string().min(1).max(200)).max(3),
 });
 export type AiPlan = z.infer<typeof aiPlanSchema>;
@@ -43,7 +43,7 @@ export const AiPlan = aiPlanSchema;
 
 export const aiIndoorExplanationSchema = z.object({
   summary: z.string().min(1).max(320),
-  actions: z.array(indoorPlanItemSchema).max(10),
+  actions: z.array(indoorPlanItemSchema).max(5),
   caveats: z.array(z.string().min(1).max(200)).max(3),
 });
 export type AiIndoorExplanation = z.infer<typeof aiIndoorExplanationSchema>;

@@ -24,6 +24,7 @@ LinkedIn post). The agent appends one row per step via `/finish-step`; humans ad
 | Fix 4 | 2026-11-25 | Gemini backup list: `GEMINI_FALLBACK_MODEL` takes several comma-separated models, tried in order with pauses of 1.5 s, 3 s, 4 s inside the 35 s budget, following Google's troubleshooting advice (back off, switch model) | `src/server/ai/geminiClient.ts`, `src/server/config.ts`, `src/server/index.ts`, `.env.example` | 4 / 398 | 96% lines, 84.77% branches, 87.07% functions (global) | – |
 | Fix 5 | 2026-11-25 | Gemini speed and model ids: API version v1beta ("-latest" aliases now resolve), low thinking for Gemini 3 models, 4096 output tokens, 20 s per call / 45 s per request, 404 model ids skipped to the next backup | `src/server/ai/geminiClient.ts`, `src/server/ai/aiClient.ts` | 3 / 401 | 96% lines, 84.85% branches, 87.11% functions (global) | – |
 | Fix 6 | 2026-11-25 | Validator false alarms: everyday "one" and the word "two-wheeler" (our own mode label) no longer count as invented numbers; placeholders written as `{{ ID }}` are normalised; prompt lists the allowed words | `src/server/ai/grounding.ts`, `src/server/ai/prompts.ts` | 2 / 403 | 96.01% lines, 84.87% branches, 87.15% functions (global) | – |
+| Fix 7 | 2026-11-25 | Lighter Gemini answers: at most 5 indoor and 2 community actions, shorter text, minimal thinking for Gemini 3 Flash models — roughly halves what the model has to write, so plans finish inside the time limit more often | `src/shared/aiSchemas.ts`, `src/domain/fallbackPlan.ts`, `src/server/ai/prompts.ts`, `src/server/ai/geminiClient.ts` | 0 / 403 | 96.01% lines, 84.89% branches, 87.15% functions (global) | – |
 
 ## Prompt evolution notes
 
@@ -47,6 +48,9 @@ Record what had to change in a prompt and why (this is the "how prompts evolved"
   `gemini-flash-lite-latest` worked in a v1beta speed test but 404'd in the app, which used v1.
 - Fix 6: our own label "Two-wheeler" and guidance text "Keep one clean room" contained number
   words, so a faithful Gemini answer could be rejected as an invented number.
+- Fix 7: measured the request offline — the prompt is small (about 4k tokens for the Delhi preset)
+  but the answer asked for up to 15 explained items. Asking for the 5 most useful indoor actions
+  and 2 community actions makes Gemini's answer much shorter and faster.
 
 ## Submissions
 

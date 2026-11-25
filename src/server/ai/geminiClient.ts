@@ -87,7 +87,9 @@ function abortableSleep(ms: number, signal: AbortSignal): Promise<void> {
  * Other ids (e.g. "-latest" aliases) keep the model's default.
  */
 export function thinkingConfigFor(model: string): ThinkingConfig | undefined {
-  return /^gemini-3/i.test(model) ? { thinkingLevel: ThinkingLevel.LOW } : undefined;
+  if (!/^gemini-3/i.test(model)) return undefined;
+  // Flash models support MINIMAL, the fastest level; other Gemini 3 models get LOW.
+  return { thinkingLevel: /flash/i.test(model) ? ThinkingLevel.MINIMAL : ThinkingLevel.LOW };
 }
 
 function sdkGenerate(apiKey: string): GenerateFn {

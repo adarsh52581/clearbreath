@@ -174,8 +174,10 @@ describe('createGeminiClient', () => {
     expect(models).toEqual(['main']);
   });
 
-  it('asks Gemini 3 models for low thinking and leaves other ids on their default', () => {
-    expect(thinkingConfigFor('gemini-3.6-flash')).toEqual({ thinkingLevel: 'LOW' });
+  it('asks Gemini 3 models for minimal/low thinking and leaves other ids on their default', () => {
+    expect(thinkingConfigFor('gemini-3.6-flash')).toEqual({ thinkingLevel: 'MINIMAL' });
+    expect(thinkingConfigFor('gemini-3.5-flash-lite')).toEqual({ thinkingLevel: 'MINIMAL' });
+    expect(thinkingConfigFor('gemini-3-pro')).toEqual({ thinkingLevel: 'LOW' });
     expect(thinkingConfigFor('gemini-flash-lite-latest')).toBeUndefined();
   });
 
