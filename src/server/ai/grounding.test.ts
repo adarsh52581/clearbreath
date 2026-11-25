@@ -220,6 +220,25 @@ describe('grounding validator - validatePlan', () => {
       expect(result.errors.some((e) => e.includes('RAW_NUMBER') && e.includes('number word'))).toBe(true);
     }
   });
+
+  it('allows everyday "one" and the word two-wheeler, but still rejects other number words', () => {
+    const plan = parsePlan(validPlanJson);
+    plan.summary = 'Keep one room clean; skip the two-wheeler today. Air is {{air_category_now}}.';
+    expect(validatePlan(JSON.stringify(plan), dummyFacts, dummyCandidates).ok).toBe(true);
+
+    plan.summary = 'Play outside for two hours less.';
+    const result = validatePlan(JSON.stringify(plan), dummyFacts, dummyCandidates);
+    expect(result.ok).toBe(false);
+    if (!result.ok) expect(result.errors.some((e) => e.includes('number word "two"'))).toBe(true);
+  });
+
+  it('accepts placeholders written with spaces or capitals and returns them normalised', () => {
+    const plan = parsePlan(validPlanJson);
+    plan.summary = 'Air is {{ AIR_CATEGORY_NOW }} today.';
+    const result = validatePlan(JSON.stringify(plan), dummyFacts, dummyCandidates);
+    expect(result.ok).toBe(true);
+    if (result.ok) expect(result.plan.summary).toBe('Air is {{air_category_now}} today.');
+  });
 });
 
 describe('grounding validator - validateIndoorExplanation', () => {

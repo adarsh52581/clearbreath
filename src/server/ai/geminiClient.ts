@@ -159,8 +159,12 @@ export function createGeminiClient(options: GeminiClientOptions): AiClient {
       let index = 0;
       let current = chain[0] ?? model;
       for (;;) {
+        const startedAt = Date.now();
         const result = await attempt(generate, current, args);
-        if (result.ok) return result.text;
+        if (result.ok) {
+          logEvent('info', 'Gemini answered', { model: current, ms: Date.now() - startedAt });
+          return result.text;
+        }
 
         const next = nextModel(result.kind, chain, index);
         if (next === null || args.signal.aborted) throw toAppError(result.error, args.signal);

@@ -10,8 +10,16 @@ export type ValidationResult<T> =
   | { ok: true; plan: T }
   | { ok: false; errors: string[] };
 
+/**
+ * Models sometimes write "{{ fact_id }}" or upper-case ids. Normalise to "{{fact_id}}" so a valid
+ * reference is not rejected (and the UI can render it).
+ */
+export function normalizePlaceholders(raw: string): string {
+  return raw.replace(/\{\{\s*([A-Za-z0-9_]+)\s*\}\}/g, (_m, id: string) => `{{${id.toLowerCase()}}}`);
+}
+
 const NUMBER_WORDS_REGEX =
-  /\b(zero|one|two|three|four|five|six|seven|eight|nine|ten|eleven|twelve|thirteen|fourteen|fifteen|sixteen|seventeen|eighteen|nineteen|twenty|thirty|forty|fifty|sixty|seventy|eighty|ninety|hundred|thousand|lakh|crore|percent|half|double|twice|dozen)\b/i;
+  /\b(zero|two|three|four|five|six|seven|eight|nine|ten|eleven|twelve|thirteen|fourteen|fifteen|sixteen|seventeen|eighteen|nineteen|twenty|thirty|forty|fifty|sixty|seventy|eighty|ninety|hundred|thousand|lakh|crore|percent|half|double|twice|dozen)\b/i;
 
 function checkStringForGrounding(
   text: string | null | undefined,
@@ -31,7 +39,7 @@ function checkStringForGrounding(
   }
 
   let stripped = text.replace(placeholderRegex, '');
-  stripped = stripped.replace(/PM2\.5|PM10|N95|CO2/gi, '');
+  stripped = stripped.replace(/PM2\.5|PM10|N95|CO2|two-wheelers?/gi, '');
 
   if (/\p{Nd}/u.test(stripped)) {
     errors.push(`RAW_NUMBER: contains digits in ${fieldPath} ("${text}")`);
@@ -107,7 +115,7 @@ export function validatePlan(
 
   let json: unknown;
   try {
-    json = JSON.parse(raw);
+    json = JSON.parse(normalizePlaceholders(raw));
   } catch (err) {
     return {
       ok: false,
@@ -159,7 +167,7 @@ export function validateIndoorExplanation(
 
   let json: unknown;
   try {
-    json = JSON.parse(raw);
+    json = JSON.parse(normalizePlaceholders(raw));
   } catch (err) {
     return {
       ok: false,
