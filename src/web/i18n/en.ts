@@ -115,6 +115,151 @@ export const en = {
         'Some forecast values used an unexpected unit and were excluded for accuracy.',
     },
   },
+  facts: {
+    kinds: {
+      measured: 'Measured',
+      forecast: 'Forecast (model)',
+      computed: 'Computed',
+      reference: 'Reference',
+      assumption: 'Assumption',
+      guidance: 'Guidance',
+      uploaded: 'Uploaded',
+    },
+    unknownValue: '—',
+  },
+  household: {
+    heading: 'Your household',
+    presetsHeading: 'Choose a sample household',
+    selectPreset: 'Select',
+    selectedPreset: 'Selected',
+    summaryHeading: 'Household details',
+    membersHeading: 'Family members',
+    memberLabel: 'Member label',
+    ageGroupLabel: 'Age group',
+    sensitivitiesLabel: 'Health sensitivities',
+    ageGroups: {
+      toddler: 'Toddler',
+      child: 'Child',
+      teen: 'Teen',
+      adult: 'Adult',
+      older_adult: 'Older adult',
+    },
+    sensitivities: {
+      asthma: 'Asthma',
+      copd: 'COPD',
+      heart: 'Heart disease',
+      pregnant: 'Pregnant',
+    },
+    activitiesHeading: 'Daily outdoor activities',
+    activityLabel: 'Activity',
+    usualHourLabel: 'Usual start hour (0–23)',
+    durationMinLabel: 'Duration (min)',
+    noActivities: 'No outdoor activities configured.',
+    commutesHeading: 'Commutes',
+    commuteLabel: 'Commute',
+    distanceKmLabel: 'Distance (km)',
+    currentModeLabel: 'Current mode',
+    noCommutes: 'No commutes configured.',
+    modes: {
+      walk: 'Walking',
+      cycle: 'Bicycle',
+      two_wheeler: 'Two-wheeler',
+      auto: 'Auto rickshaw',
+      car: 'Personal car',
+      cab: 'Cab / taxi',
+      bus: 'Public bus',
+      metro: 'Metro',
+    },
+    homeHeading: 'Home & indoor setup',
+    roomAreaLabel: 'Room area (m²)',
+    windowStateLabel: 'Windows',
+    windowStates: {
+      sealed: 'Sealed',
+      closed: 'Closed',
+      partly_open: 'Partly open',
+      open: 'Open',
+    },
+    purifierPresentLabel: 'Air purifier present',
+    purifierCadrLabel: 'Purifier CADR (m³/h)',
+    cookingFuelLabel: 'Cooking fuel',
+    cookingFuels: {
+      lpg: 'LPG',
+      png: 'PNG',
+      induction: 'Induction',
+      biomass: 'Biomass',
+      kerosene: 'Kerosene',
+    },
+    kitchenExhaustLabel: 'Kitchen exhaust fan',
+    incenseLabel: 'Incense / agarbatti indoors',
+    mosquitoCoilLabel: 'Mosquito coil indoors',
+    hoursIndoorsLabel: 'Hours indoors per day',
+    plantsCountLabel: 'Indoor plants count',
+    notesLabel: 'Additional notes (optional)',
+    notesHelper: "Don't include names or addresses",
+    notesCounterSuffix: '/ 300',
+    uploadsHeading: 'Upload custom data',
+    uploadHouseholdLabel: 'Upload household (JSON)',
+    uploadAirLabel: 'Upload air data (CSV)',
+    useLiveData: 'Use live data',
+    uploadHouseholdSuccess: 'Loaded household:',
+    uploadAirSuccessPrefix: 'Loaded',
+    uploadAirSuccessMiddle: 'readings from',
+    uploadErrorHeading: 'Upload could not be loaded:',
+    validation: {
+      required: 'This field is required.',
+      rangePrefix: 'Must be between',
+      andWord: 'and',
+    },
+    buildPlanButton: "Build my family's plan",
+    buildingPlanButton: 'Building plan…',
+  },
+  plan: {
+    heading: "Your family's cleaner-air plan",
+    loadingLabel: 'Loading plan view…',
+    errorTitle: 'Could not build plan',
+    rateLimitError: 'Too many requests — please try again in a minute.',
+    origin: {
+      gemini: 'Explained by Gemini',
+      savedPrefix: 'Saved explanation from',
+      fallback: "AI explanation unavailable — showing ClearBreath's computed ranking",
+    },
+    routineHeading: 'Daily routine & commutes',
+    chosenOptionLabel: 'Recommended choice',
+    tradeoffLabel: 'Trade-off',
+    priorityLabel: 'Priority',
+    priorities: {
+      high: 'High',
+      medium: 'Medium',
+      low: 'Low',
+    },
+    seeNumbers: 'See the numbers',
+    factLabelCol: 'Fact',
+    factValueCol: 'Value',
+    factKindCol: 'Kind',
+    factProvenanceCol: 'Source',
+    ledgerHeading: 'Family impact ledger',
+    ledgerCaption: 'Estimated with recommended options; not a medical measurement',
+    ledgerMemberCol: 'Member (age group)',
+    ledgerUsualCol: 'Usual-day intake',
+    ledgerPlanCol: 'Plan intake',
+    ledgerChangeCol: 'Change',
+    ledgerCo2SavedLabel: 'Weekly CO2 saved',
+    ledgerVehicleKmLabel: 'Weekly private vehicle-km avoided',
+    ledgerHoursNote:
+      'Hours not covered by listed activities, commutes, or hours indoors per day (such as school or office time) are not counted.',
+    indoorHeading: 'Indoor air actions',
+    costTiers: {
+      free: 'Free',
+      low: 'Low cost',
+      medium: 'Medium cost',
+      high: 'Higher cost',
+    },
+    communityHeading: 'Community actions',
+    caveatsHeading: 'Important caveats',
+    noRoutine: 'No outdoor activities or commutes to adjust.',
+    noIndoor: 'No additional indoor actions suggested.',
+    noCommunity: 'No community actions suggested.',
+  },
 } as const;
 
 export type Messages = {
@@ -152,5 +297,93 @@ export type Messages = {
     retry: string;
     errorTitle: string;
     warnings: { [K in keyof typeof en.status.warnings]: string };
+  };
+  facts: {
+    kinds: { [K in keyof typeof en.facts.kinds]: string };
+    unknownValue: string;
+  };
+  household: {
+    heading: string;
+    presetsHeading: string;
+    selectPreset: string;
+    selectedPreset: string;
+    summaryHeading: string;
+    membersHeading: string;
+    memberLabel: string;
+    ageGroupLabel: string;
+    sensitivitiesLabel: string;
+    ageGroups: { [K in keyof typeof en.household.ageGroups]: string };
+    sensitivities: { [K in keyof typeof en.household.sensitivities]: string };
+    activitiesHeading: string;
+    activityLabel: string;
+    usualHourLabel: string;
+    durationMinLabel: string;
+    noActivities: string;
+    commutesHeading: string;
+    commuteLabel: string;
+    distanceKmLabel: string;
+    currentModeLabel: string;
+    noCommutes: string;
+    modes: { [K in keyof typeof en.household.modes]: string };
+    homeHeading: string;
+    roomAreaLabel: string;
+    windowStateLabel: string;
+    windowStates: { [K in keyof typeof en.household.windowStates]: string };
+    purifierPresentLabel: string;
+    purifierCadrLabel: string;
+    cookingFuelLabel: string;
+    cookingFuels: { [K in keyof typeof en.household.cookingFuels]: string };
+    kitchenExhaustLabel: string;
+    incenseLabel: string;
+    mosquitoCoilLabel: string;
+    hoursIndoorsLabel: string;
+    plantsCountLabel: string;
+    notesLabel: string;
+    notesHelper: string;
+    notesCounterSuffix: string;
+    uploadsHeading: string;
+    uploadHouseholdLabel: string;
+    uploadAirLabel: string;
+    useLiveData: string;
+    uploadHouseholdSuccess: string;
+    uploadAirSuccessPrefix: string;
+    uploadAirSuccessMiddle: string;
+    uploadErrorHeading: string;
+    validation: { [K in keyof typeof en.household.validation]: string };
+    buildPlanButton: string;
+    buildingPlanButton: string;
+  };
+  plan: {
+    heading: string;
+    loadingLabel: string;
+    errorTitle: string;
+    rateLimitError: string;
+    origin: { [K in keyof typeof en.plan.origin]: string };
+    routineHeading: string;
+    chosenOptionLabel: string;
+    tradeoffLabel: string;
+    priorityLabel: string;
+    priorities: { [K in keyof typeof en.plan.priorities]: string };
+    seeNumbers: string;
+    factLabelCol: string;
+    factValueCol: string;
+    factKindCol: string;
+    factProvenanceCol: string;
+    ledgerHeading: string;
+    ledgerCaption: string;
+    ledgerMemberCol: string;
+    ledgerUsualCol: string;
+    ledgerPlanCol: string;
+    ledgerChangeCol: string;
+    ledgerCo2SavedLabel: string;
+    ledgerVehicleKmLabel: string;
+    ledgerHoursNote: string;
+    indoorHeading: string;
+    costTiers: { [K in keyof typeof en.plan.costTiers]: string };
+    communityHeading: string;
+    caveatsHeading: string;
+    noRoutine: string;
+    noIndoor: string;
+    noCommunity: string;
   };
 };

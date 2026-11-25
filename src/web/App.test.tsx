@@ -3,7 +3,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { CITIES } from '../domain/data/cities.js';
-import type { AirReport, City, LocationRef } from '../shared/schemas.js';
+import type { AirReport, City, LocationRef, PlanResponse } from '../shared/schemas.js';
 import { expectNoA11yViolations } from '../test/a11y.js';
 import { clearAirCache } from './hooks/useAir.js';
 import App from './App.js';
@@ -130,5 +130,52 @@ describe('App', () => {
     expect(fetchAir).toHaveBeenCalledWith({ cityId: 'mumbai' });
 
     await expectNoA11yViolations(container);
+  });
+
+  it('builds a family plan, renders PlanView, and moves focus to the plan heading', async () => {
+    const user = userEvent.setup();
+    const fetchAir = vi.fn().mockResolvedValue(makeReport('Delhi', 340, 'very_poor'));
+    const fetchCities = vi.fn().mockResolvedValue(mockCities);
+    const mockPlanResponse: PlanResponse = {
+      air: makeReport('Delhi', 340, 'very_poor'),
+      facts: [
+        {
+          id: 'air_category_now',
+          label: 'Current AQI category',
+          value: 'very_poor',
+          display: 'Very Poor',
+          kind: 'computed',
+          provenance: 'CPCB category classification',
+        },
+      ],
+      candidates: { activities: [], commutes: [], indoor: [], community: [] },
+      plan: {
+        summary: 'Air quality is {{air_category_now}}.',
+        routine: [],
+        indoor: [],
+        community: [],
+        caveats: ['Not medical advice.'],
+      },
+      meta: {
+        origin: 'gemini',
+        attempts: 1,
+        generatedAtUtc: '2026-11-24T06:00:00.000Z',
+        warnings: [],
+      },
+    };
+    const postPlan = vi.fn().mockResolvedValue(mockPlanResponse);
+
+    render(<App fetchAir={fetchAir} fetchCities={fetchCities} postPlan={postPlan} />);
+
+    await waitFor(() => expect(screen.getByText('340')).toBeInTheDocument());
+
+    const buildBtn = screen.getByRole('button', { name: /build my family's plan/i });
+    await user.click(buildBtn);
+
+    const planHeading = await screen.findByRole('heading', {
+      name: /your family's cleaner-air plan/i,
+    });
+    expect(planHeading).toBeInTheDocument();
+    expect(document.activeElement).toBe(planHeading);
   });
 });
