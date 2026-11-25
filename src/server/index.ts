@@ -30,7 +30,11 @@ const airService = createAirService({
   clock: () => new Date().toISOString(),
 });
 
-const aiClient = createGeminiClient(config.geminiApiKey ?? '', config.geminiModel);
+const aiClient = createGeminiClient({
+  apiKey: config.geminiApiKey ?? '',
+  model: config.geminiModel,
+  fallbackModel: config.geminiFallbackModel,
+});
 const planService = createPlanService({
   airService,
   ai: aiClient,

@@ -55,4 +55,11 @@ describe('config', () => {
     expect(config.geminiApiKey).toBe('test-gemini-key');
     expect(config.openaqApiKey).toBe('test-openaq-key');
   });
+  it('reads an optional fallback model and treats blank as unset', () => {
+    expect(loadConfig({ NODE_ENV: 'test', GEMINI_FALLBACK_MODEL: '  backup-model  ' }).geminiFallbackModel).toBe(
+      'backup-model',
+    );
+    expect(loadConfig({ NODE_ENV: 'test', GEMINI_FALLBACK_MODEL: '   ' }).geminiFallbackModel).toBeUndefined();
+    expect(loadConfig({ NODE_ENV: 'test' }).geminiFallbackModel).toBeUndefined();
+  });
 });

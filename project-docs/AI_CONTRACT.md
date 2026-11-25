@@ -20,6 +20,10 @@
   so tests use a `FakeAiClient` with scripted responses.
 - Map provider errors: 429 → `RATE_LIMITED`, 5xx/timeout → `UPSTREAM_UNAVAILABLE` (both trigger
   the fallback chain, never a 500 to the user).
+- Transient provider errors: when the model is overloaded (503/500), wait about 1.5 s and try once
+  more — on `GEMINI_FALLBACK_MODEL` if set, otherwise the same model. On quota errors (429), try
+  the fallback model only. Never retry other errors. This retry happens inside the client, before
+  the corrective-retry logic in §8.
 
 ## 3. System instruction — plan (store verbatim in `src/server/ai/prompts.ts`)
 

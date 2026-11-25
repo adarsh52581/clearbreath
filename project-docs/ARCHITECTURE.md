@@ -274,6 +274,8 @@ APP_VERSION=dev
 GEMINI_API_KEY=
 # Current Flash model id from Google's Gemini API docs / AI Studio model list
 GEMINI_MODEL=gemini-3.6-flash
+# Optional: second model used when the main one is overloaded (503) or out of quota (429)
+GEMINI_FALLBACK_MODEL=
 OPENAQ_API_KEY=
 # Optional: key with ONLY the Air Quality API enabled. Empty = use Open-Meteo for forecasts.
 GOOGLE_MAPS_API_KEY=

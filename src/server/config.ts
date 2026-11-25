@@ -7,6 +7,7 @@ const envSchema = z.object({
   APP_VERSION: z.string().default('dev'),
   GEMINI_API_KEY: z.string().optional(),
   GEMINI_MODEL: z.string().default('gemini-3.6-flash'),
+  GEMINI_FALLBACK_MODEL: z.string().optional(),
   OPENAQ_API_KEY: z.string().optional(),
   GOOGLE_MAPS_API_KEY: z.string().optional(),
   FORECAST_PROVIDER: z.enum(['google', 'openmeteo']).default('google'),
@@ -21,6 +22,8 @@ export type Config = {
   appVersion: string;
   geminiApiKey?: string;
   geminiModel: string;
+  /** Optional second model used when the main one is overloaded or out of quota. */
+  geminiFallbackModel?: string;
   openaqApiKey?: string;
   googleMapsApiKey?: string;
   forecastProvider: 'google' | 'openmeteo';
@@ -69,6 +72,7 @@ export function loadConfig(rawEnv: Record<string, string | undefined> = process.
     appVersion: env.APP_VERSION,
     geminiApiKey: env.GEMINI_API_KEY,
     geminiModel: env.GEMINI_MODEL,
+    geminiFallbackModel: env.GEMINI_FALLBACK_MODEL?.trim() || undefined,
     openaqApiKey: env.OPENAQ_API_KEY,
     googleMapsApiKey: env.GOOGLE_MAPS_API_KEY,
     forecastProvider: env.FORECAST_PROVIDER,
